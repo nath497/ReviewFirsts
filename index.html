@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,26 +9,19 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap"
+        rel="stylesheet"
+    >
 
     <link rel="stylesheet" href="style.css">
-
-    <!-- PDF reader -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
-    <!-- DOCX reader -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-
-    <!-- PPTX reader -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
-    <!-- OCR -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 
 <body>
 
 <div id="toastContainer"></div>
+
 
 <!-- =========================
      WELCOME SCREEN
@@ -58,11 +52,15 @@
             <span>🔔 Reminders</span>
         </div>
 
-        <button class="primary-btn large-btn" onclick="showProfileSetup()">
+        <button
+            class="primary-btn large-btn"
+            onclick="showProfileSetup()"
+        >
             ✨ Let's Get Started
         </button>
 
     </div>
+
 </section>
 
 
@@ -76,7 +74,9 @@
 
         <div class="setup-icon">🌷</div>
 
-        <p class="mini-label">LET'S PERSONALIZE YOUR STUDY SPACE</p>
+        <p class="mini-label">
+            LET'S PERSONALIZE YOUR STUDY SPACE
+        </p>
 
         <h2>What should I call you?</h2>
 
@@ -92,11 +92,15 @@
             maxlength="30"
         >
 
-        <button class="primary-btn large-btn" onclick="saveName()">
+        <button
+            class="primary-btn large-btn"
+            onclick="saveName()"
+        >
             Continue ♡
         </button>
 
     </div>
+
 </section>
 
 
@@ -106,66 +110,128 @@
 
 <section id="appScreen" class="app-screen">
 
-    <!-- SIDEBAR -->
+
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
 
     <aside class="sidebar">
 
         <div class="brand">
+
             <div class="brand-icon">🎀</div>
+
             <div>
+
                 <h2>ReviewFirst</h2>
-                <span>study smarter ♡</span>
+
+                <span>
+                    study smarter ♡
+                </span>
+
             </div>
+
         </div>
+
 
         <nav>
 
-            <button class="nav-btn active" onclick="showPage('dashboardPage', this)">
+            <button
+                class="nav-btn active"
+                onclick="showPage('dashboardPage', this)"
+            >
                 <span>🏠</span>
                 Dashboard
             </button>
 
-            <button class="nav-btn" onclick="showPage('uploadPage', this)">
-                <span>📚</span>
-                Upload Notes
+
+            <button
+                class="nav-btn"
+                onclick="showPage('uploadPage', this)"
+            >
+                <span>✍️</span>
+                Create Reviewer
             </button>
 
-            <button class="nav-btn" onclick="showPage('reviewerPage', this)">
+
+            <button
+                class="nav-btn"
+                onclick="showPage('reviewerPage', this)"
+            >
                 <span>✨</span>
                 My Reviewer
             </button>
 
-            <button class="nav-btn" onclick="showPage('quizPage', this)">
+
+            <button
+                class="nav-btn"
+                onclick="showPage('quizPage', this)"
+            >
                 <span>📝</span>
                 Quiz
             </button>
 
-            <button class="nav-btn" onclick="showPage('weakPage', this)">
+
+            <button
+                class="nav-btn"
+                onclick="showPage('weakPage', this)"
+            >
                 <span>🧠</span>
                 Weak Topics
             </button>
 
-            <button class="nav-btn" onclick="showPage('plannerPage', this)">
+
+            <button
+                class="nav-btn"
+                onclick="showPage('plannerPage', this)"
+            >
                 <span>📅</span>
                 Study Planner
             </button>
 
-            <button class="nav-btn" onclick="showPage('activitiesPage', this)">
+
+            <button
+                class="nav-btn"
+                onclick="showPage('activitiesPage', this)"
+            >
                 <span>🔔</span>
                 Activities
-                <span id="activityBadge" class="activity-badge">0</span>
+
+                <span
+                    id="activityBadge"
+                    class="activity-badge"
+                >
+                    0
+                </span>
+
             </button>
 
         </nav>
 
+
         <div class="sidebar-bottom">
 
-            <button class="profile-btn" onclick="openProfileModal()">
-                <div class="profile-avatar">🌷</div>
-                <div>
-                    <strong id="sidebarName">Student</strong>
-                    <small>Edit profile</small>
+            <button
+                class="profile-btn"
+                onclick="openProfileModal()"
+            >
+
+                <div class="profile-avatar">
+                    🌷
                 </div>
+
+                <div>
+
+                    <strong id="sidebarName">
+                        Student
+                    </strong>
+
+                    <small>
+                        Edit profile
+                    </small>
+
+                </div>
+
             </button>
 
         </div>
@@ -173,21 +239,36 @@
     </aside>
 
 
-    <!-- MAIN CONTENT -->
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
 
     <main class="main-content">
+
 
         <!-- MOBILE HEADER -->
 
         <div class="mobile-header">
+
             <div class="brand">
-                <div class="brand-icon">🎀</div>
-                <h2>ReviewFirst</h2>
+
+                <div class="brand-icon">
+                    🎀
+                </div>
+
+                <h2>
+                    ReviewFirst
+                </h2>
+
             </div>
 
-            <button onclick="toggleSidebar()" class="menu-btn">
+            <button
+                onclick="toggleSidebar()"
+                class="menu-btn"
+            >
                 ☰
             </button>
+
         </div>
 
 
@@ -195,27 +276,46 @@
              DASHBOARD
         ========================== -->
 
-        <section id="dashboardPage" class="page active-page">
+        <section
+            id="dashboardPage"
+            class="page active-page"
+        >
 
             <div class="top-heading">
 
                 <div>
-                    <p class="hello-small" id="helloText">
+
+                    <p
+                        class="hello-small"
+                        id="helloText"
+                    >
                         Good evening 🌷
                     </p>
 
                     <h1>
-                        Hii, <span id="dashboardName">Student</span>! ♡
+                        Hii,
+                        <span id="dashboardName">
+                            Student
+                        </span>! ♡
                     </h1>
 
                     <p class="muted">
                         Ready to study a little today?
                     </p>
+
                 </div>
 
+
                 <div class="date-card">
-                    <span>Today</span>
-                    <strong id="currentDate">--</strong>
+
+                    <span>
+                        Today
+                    </span>
+
+                    <strong id="currentDate">
+                        --
+                    </strong>
+
                 </div>
 
             </div>
@@ -226,35 +326,86 @@
             <div class="stats-grid">
 
                 <div class="stat-card">
-                    <div class="stat-icon pink">📚</div>
-                    <div>
-                        <span>Current Topic</span>
-                        <strong id="currentTopic">None yet</strong>
+
+                    <div class="stat-icon pink">
+                        📚
                     </div>
+
+                    <div>
+
+                        <span>
+                            Current Topic
+                        </span>
+
+                        <strong id="currentTopic">
+                            None yet
+                        </strong>
+
+                    </div>
+
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-icon purple">🧠</div>
-                    <div>
-                        <span>Weak Topics</span>
-                        <strong id="weakCount">0</strong>
-                    </div>
-                </div>
 
                 <div class="stat-card">
-                    <div class="stat-icon peach">📝</div>
-                    <div>
-                        <span>Quiz Score</span>
-                        <strong id="lastScore">—</strong>
+
+                    <div class="stat-icon purple">
+                        🧠
                     </div>
+
+                    <div>
+
+                        <span>
+                            Weak Topics
+                        </span>
+
+                        <strong id="weakCount">
+                            0
+                        </strong>
+
+                    </div>
+
                 </div>
 
+
                 <div class="stat-card">
-                    <div class="stat-icon lavender">🔔</div>
-                    <div>
-                        <span>Upcoming</span>
-                        <strong id="upcomingCount">0</strong>
+
+                    <div class="stat-icon peach">
+                        📝
                     </div>
+
+                    <div>
+
+                        <span>
+                            Quiz Score
+                        </span>
+
+                        <strong id="lastScore">
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon lavender">
+                        🔔
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Upcoming
+                        </span>
+
+                        <strong id="upcomingCount">
+                            0
+                        </strong>
+
+                    </div>
+
                 </div>
 
             </div>
@@ -263,37 +414,104 @@
             <!-- QUICK ACTIONS -->
 
             <div class="section-heading">
+
                 <div>
-                    <h2>What would you like to do?</h2>
-                    <p>Let's make studying a little easier. 🌷</p>
+
+                    <h2>
+                        What would you like to do?
+                    </h2>
+
+                    <p>
+                        Let's make studying a little easier. 🌷
+                    </p>
+
                 </div>
+
             </div>
+
 
             <div class="quick-grid">
 
-                <button class="quick-card" onclick="showPage('uploadPage')">
-                    <div>📚</div>
-                    <h3>Upload Notes</h3>
-                    <p>Turn your notes into a reviewer.</p>
+
+                <button
+                    class="quick-card"
+                    onclick="showPage('uploadPage')"
+                >
+
+                    <div>
+                        ✍️
+                    </div>
+
+                    <h3>
+                        Create Reviewer
+                    </h3>
+
+                    <p>
+                        Make your own reviewer and quiz.
+                    </p>
+
                 </button>
 
-                <button class="quick-card" onclick="showPage('reviewerPage')">
-                    <div>✨</div>
-                    <h3>Magic Review</h3>
-                    <p>Review your current topic.</p>
+
+                <button
+                    class="quick-card"
+                    onclick="showPage('reviewerPage')"
+                >
+
+                    <div>
+                        ✨
+                    </div>
+
+                    <h3>
+                        My Reviewer
+                    </h3>
+
+                    <p>
+                        Study your current topic.
+                    </p>
+
                 </button>
 
-                <button class="quick-card" onclick="showPage('quizPage')">
-                    <div>📝</div>
-                    <h3>Take a Quiz</h3>
-                    <p>Test what you remember.</p>
+
+                <button
+                    class="quick-card"
+                    onclick="showPage('quizPage')"
+                >
+
+                    <div>
+                        📝
+                    </div>
+
+                    <h3>
+                        Take a Quiz
+                    </h3>
+
+                    <p>
+                        Test what you remember.
+                    </p>
+
                 </button>
 
-                <button class="quick-card" onclick="showPage('activitiesPage')">
-                    <div>🔔</div>
-                    <h3>Add Activity</h3>
-                    <p>Never forget school tasks.</p>
+
+                <button
+                    class="quick-card"
+                    onclick="showPage('activitiesPage')"
+                >
+
+                    <div>
+                        🔔
+                    </div>
+
+                    <h3>
+                        Add Activity
+                    </h3>
+
+                    <p>
+                        Never forget school tasks.
+                    </p>
+
                 </button>
+
 
             </div>
 
@@ -301,21 +519,47 @@
             <!-- UPCOMING -->
 
             <div class="section-heading">
+
                 <div>
-                    <h2>Upcoming Activities</h2>
-                    <p>Your next school tasks.</p>
+
+                    <h2>
+                        Upcoming Activities
+                    </h2>
+
+                    <p>
+                        Your next school tasks.
+                    </p>
+
                 </div>
 
-                <button class="text-btn" onclick="showPage('activitiesPage')">
+
+                <button
+                    class="text-btn"
+                    onclick="showPage('activitiesPage')"
+                >
                     View all →
                 </button>
+
             </div>
 
-            <div id="dashboardActivities" class="activity-preview">
+
+            <div
+                id="dashboardActivities"
+                class="activity-preview"
+            >
+
                 <div class="empty-state small">
-                    <div>🌷</div>
-                    <p>No upcoming activities yet.</p>
+
+                    <div>
+                        🌷
+                    </div>
+
+                    <p>
+                        No upcoming activities yet.
+                    </p>
+
                 </div>
+
             </div>
 
 
@@ -324,7 +568,10 @@
             <div class="motivation-card">
 
                 <div>
-                    <span>💗 A little reminder</span>
+
+                    <span>
+                        💗 A little reminder
+                    </span>
 
                     <h2>
                         You don't have to study everything at once.
@@ -333,9 +580,12 @@
                     <p>
                         ReviewFirst helps you focus on what matters first.
                     </p>
+
                 </div>
 
-                <div class="motivation-heart">♡</div>
+                <div class="motivation-heart">
+                    ♡
+                </div>
 
             </div>
 
@@ -343,120 +593,247 @@
 
 
         <!-- =========================
-             UPLOAD PAGE
+             CREATE REVIEWER PAGE
         ========================== -->
 
-        <section id="uploadPage" class="page">
+        <section
+            id="uploadPage"
+            class="page"
+        >
 
             <div class="page-heading">
+
                 <div>
-                    <p class="mini-label">STEP 01</p>
-                    <h1>Upload your notes 📚</h1>
-                    <p>
-                        Give ReviewFirst your learning material and let it organize the important parts.
+
+                    <p class="mini-label">
+                        STEP 01
                     </p>
-                </div>
-            </div>
 
+                    <h1>
+                        Create your reviewer ✍️
+                    </h1>
 
-            <div id="dropZone" class="upload-box">
+                    <p>
+                        Write your own reviewer, then let ReviewFirst
+                        turn it into flashcards and a quiz. ♡
+                    </p>
 
-                <div class="upload-icon">📖</div>
-
-                <h2>Drop your notes here</h2>
-
-                <p>
-                    or choose a file from your device
-                </p>
-
-                <input
-                    type="file"
-                    id="fileInput"
-                    hidden
-                    accept=".pdf,.docx,.pptx,.ppt,.txt,.jpg,.jpeg,.png"
-                    onchange="handleFile(this.files[0])"
-                >
-
-                <button class="primary-btn" onclick="document.getElementById('fileInput').click()">
-                    Choose File
-                </button>
-
-                <div class="supported">
-                    PDF • DOCX • PPTX • TXT • JPG • PNG
                 </div>
 
             </div>
 
 
-            <div id="selectedFile" class="selected-file hidden">
+            <div class="upload-box">
 
-                <div class="file-icon">📄</div>
-
-                <div class="file-info">
-                    <strong id="fileName">file.pdf</strong>
-                    <span id="fileSize">0 KB</span>
+                <div class="upload-icon">
+                    📖
                 </div>
 
-                <button onclick="removeFile()" class="remove-btn">
-                    ×
-                </button>
-
-            </div>
-
-
-            <div id="processingBox" class="processing-box hidden">
-
-                <div class="loader"></div>
-
-                <h2 id="processingTitle">
-                    Reading your notes...
+                <h2>
+                    Build your reviewer
                 </h2>
 
-                <p id="processingText">
-                    ReviewFirst is analyzing your material. ♡
+                <p>
+                    Put the lesson into your own words.
+                    ReviewFirst will organize it into study tools.
                 </p>
 
-                <div class="progress-track">
-                    <div id="progressBar" class="progress-bar"></div>
+
+                <div
+                    style="
+                        text-align:left;
+                        width:100%;
+                        max-width:760px;
+                        margin:22px auto 0;
+                    "
+                >
+
+
+                    <!-- TOPIC -->
+
+                    <label
+                        style="
+                            display:block;
+                            font-weight:700;
+                            margin-bottom:7px;
+                        "
+                    >
+                        Topic
+                    </label>
+
+                    <input
+                        id="reviewTopic"
+                        class="text-input"
+                        type="text"
+                        maxlength="100"
+                        placeholder="e.g. Photosynthesis"
+                    >
+
+
+                    <!-- SUMMARY -->
+
+                    <label
+                        style="
+                            display:block;
+                            font-weight:700;
+                            margin:18px 0 7px;
+                        "
+                    >
+                        Simple Summary
+                    </label>
+
+                    <textarea
+                        id="reviewSummary"
+                        class="text-input"
+                        rows="4"
+                        placeholder="Write a short explanation of the topic in your own words..."
+                        style="
+                            width:100%;
+                            resize:vertical;
+                            min-height:110px;
+                            padding:14px;
+                        "
+                    ></textarea>
+
+
+                    <!-- KEY POINTS -->
+
+                    <label
+                        style="
+                            display:block;
+                            font-weight:700;
+                            margin:18px 0 7px;
+                        "
+                    >
+                        Key Points
+                    </label>
+
+                    <textarea
+                        id="reviewKeyPoints"
+                        class="text-input"
+                        rows="6"
+                        placeholder="Put one key point per line.
+
+Example:
+Plants use sunlight as an energy source.
+Water and carbon dioxide are needed.
+Glucose and oxygen are produced."
+                        style="
+                            width:100%;
+                            resize:vertical;
+                            min-height:150px;
+                            padding:14px;
+                        "
+                    ></textarea>
+
+
+                    <!-- TERMS -->
+
+                    <label
+                        style="
+                            display:block;
+                            font-weight:700;
+                            margin:18px 0 7px;
+                        "
+                    >
+                        Important Terms & Meanings
+                    </label>
+
+                    <textarea
+                        id="reviewTerms"
+                        class="text-input"
+                        rows="5"
+                        placeholder="Put one term per line using: Term - Meaning
+
+Example:
+Chlorophyll - Pigment that absorbs sunlight.
+Glucose - Sugar produced during photosynthesis."
+                        style="
+                            width:100%;
+                            resize:vertical;
+                            min-height:130px;
+                            padding:14px;
+                        "
+                    ></textarea>
+
+
+                    <!-- CREATE BUTTON -->
+
+                    <button
+                        id="magicReviewBtn"
+                        class="magic-btn"
+                        onclick="createMyReviewer()"
+                        style="
+                            margin-top:20px;
+                            width:100%;
+                        "
+                    >
+                        ✨ Create My Reviewer & Quiz
+                    </button>
+
                 </div>
 
             </div>
 
 
-            <button
-                id="magicReviewBtn"
-                class="magic-btn hidden"
-                onclick="startMagicReview()"
-            >
-                ✨ Magic Review
-            </button>
-
+            <!-- TIPS -->
 
             <div class="upload-tips">
 
-                <div>
-                    <span>💡</span>
-                    <strong>For better summaries</strong>
-                    <p>
-                        Upload clear notes with readable text.
-                    </p>
-                </div>
 
                 <div>
-                    <span>🖼️</span>
-                    <strong>Photos are okay</strong>
+
+                    <span>
+                        ✍️
+                    </span>
+
+                    <strong>
+                        Use your own words
+                    </strong>
+
                     <p>
-                        ReviewFirst can read text from note photos.
+                        Writing your own reviewer can help
+                        you understand the lesson better.
                     </p>
+
                 </div>
 
+
                 <div>
-                    <span>🎯</span>
-                    <strong>Stay on topic</strong>
+
+                    <span>
+                        🧠
+                    </span>
+
+                    <strong>
+                        Quiz is automatic
+                    </strong>
+
                     <p>
-                        Your reviewer is based on the material you upload.
+                        ReviewFirst creates practice
+                        questions from what you enter.
                     </p>
+
                 </div>
+
+
+                <div>
+
+                    <span>
+                        🎯
+                    </span>
+
+                    <strong>
+                        Find what to review
+                    </strong>
+
+                    <p>
+                        Your missed quiz questions appear
+                        in Weak Topics.
+                    </p>
+
+                </div>
+
 
             </div>
 
@@ -467,131 +844,233 @@
              REVIEWER PAGE
         ========================== -->
 
-        <section id="reviewerPage" class="page">
+        <section
+            id="reviewerPage"
+            class="page"
+        >
 
             <div class="page-heading">
 
                 <div>
-                    <p class="mini-label">YOUR REVIEWER</p>
+
+                    <p class="mini-label">
+                        YOUR REVIEWER
+                    </p>
 
                     <h1 id="reviewerTitle">
                         No topic yet 📖
                     </h1>
 
                     <p id="reviewerSubtitle">
-                        Upload your notes first.
+                        Create your own reviewer first.
                     </p>
+
                 </div>
 
-                <button class="primary-btn" onclick="showPage('uploadPage')">
-                    📚 Upload New
+
+                <button
+                    class="primary-btn"
+                    onclick="showPage('uploadPage')"
+                >
+                    ✍️ Create New
                 </button>
 
             </div>
 
 
-            <div id="reviewerEmpty" class="empty-review">
+            <div
+                id="reviewerEmpty"
+                class="empty-review"
+            >
 
-                <div>📚</div>
+                <div>
+                    📚
+                </div>
 
-                <h2>Your reviewer will appear here</h2>
+                <h2>
+                    Your reviewer will appear here
+                </h2>
 
                 <p>
-                    Upload your notes and click Magic Review to begin.
+                    Create a reviewer first and ReviewFirst
+                    will turn it into flashcards and a quiz.
                 </p>
 
-                <button class="primary-btn" onclick="showPage('uploadPage')">
-                    Upload Notes
+                <button
+                    class="primary-btn"
+                    onclick="showPage('uploadPage')"
+                >
+                    Create Reviewer
                 </button>
 
             </div>
 
 
-            <div id="reviewerContent" class="hidden">
+            <div
+                id="reviewerContent"
+                class="hidden"
+            >
+
+
+                <!-- REVIEW TABS -->
 
                 <div class="review-tabs">
 
-                    <button class="review-tab active" onclick="showReviewTab('summaryTab', this)">
+
+                    <button
+                        class="review-tab active"
+                        onclick="showReviewTab('summaryTab', this)"
+                    >
                         ✨ Summary
                     </button>
 
-                    <button class="review-tab" onclick="showReviewTab('keypointsTab', this)">
+
+                    <button
+                        class="review-tab"
+                        onclick="showReviewTab('keypointsTab', this)"
+                    >
                         📝 Key Points
                     </button>
 
-                    <button class="review-tab" onclick="showReviewTab('termsTab', this)">
+
+                    <button
+                        class="review-tab"
+                        onclick="showReviewTab('termsTab', this)"
+                    >
                         💡 Terms
                     </button>
 
-                    <button class="review-tab" onclick="showReviewTab('flashcardsTab', this)">
+
+                    <button
+                        class="review-tab"
+                        onclick="showReviewTab('flashcardsTab', this)"
+                    >
                         🃏 Flashcards
                     </button>
 
                 </div>
 
 
-                <div id="summaryTab" class="review-tab-content active">
+                <!-- SUMMARY -->
+
+                <div
+                    id="summaryTab"
+                    class="review-tab-content active"
+                >
 
                     <div class="review-card">
 
                         <div class="card-title">
-                            <span>✨</span>
-                            <h2>Simple Summary</h2>
+
+                            <span>
+                                ✨
+                            </span>
+
+                            <h2>
+                                Simple Summary
+                            </h2>
+
                         </div>
 
-                        <div id="summaryContent" class="summary-text">
-                        </div>
+
+                        <div
+                            id="summaryContent"
+                            class="summary-text"
+                        ></div>
 
                     </div>
 
                 </div>
 
 
-                <div id="keypointsTab" class="review-tab-content">
+                <!-- KEY POINTS -->
+
+                <div
+                    id="keypointsTab"
+                    class="review-tab-content"
+                >
 
                     <div class="review-card">
 
                         <div class="card-title">
-                            <span>📝</span>
-                            <h2>Key Points</h2>
+
+                            <span>
+                                📝
+                            </span>
+
+                            <h2>
+                                Key Points
+                            </h2>
+
                         </div>
 
-                        <ul id="keyPointsList" class="key-points">
-                        </ul>
+
+                        <ul
+                            id="keyPointsList"
+                            class="key-points"
+                        ></ul>
 
                     </div>
 
                 </div>
 
 
-                <div id="termsTab" class="review-tab-content">
+                <!-- TERMS -->
+
+                <div
+                    id="termsTab"
+                    class="review-tab-content"
+                >
 
                     <div class="review-card">
 
                         <div class="card-title">
-                            <span>💡</span>
-                            <h2>Important Terms</h2>
+
+                            <span>
+                                💡
+                            </span>
+
+                            <h2>
+                                Important Terms
+                            </h2>
+
                         </div>
 
-                        <div id="termsList" class="terms-grid">
-                        </div>
+
+                        <div
+                            id="termsList"
+                            class="terms-grid"
+                        ></div>
 
                     </div>
 
                 </div>
 
 
-                <div id="flashcardsTab" class="review-tab-content">
+                <!-- FLASHCARDS -->
+
+                <div
+                    id="flashcardsTab"
+                    class="review-tab-content"
+                >
 
                     <div class="flashcard-wrapper">
 
-                        <div id="flashcard" class="flashcard" onclick="flipFlashcard()">
+
+                        <div
+                            id="flashcard"
+                            class="flashcard"
+                            onclick="flipFlashcard()"
+                        >
 
                             <div class="flashcard-inner">
 
+
                                 <div class="flashcard-front">
 
-                                    <span>QUESTION</span>
+                                    <span>
+                                        QUESTION
+                                    </span>
 
                                     <h2 id="flashcardQuestion">
                                         —
@@ -603,15 +1082,19 @@
 
                                 </div>
 
+
                                 <div class="flashcard-back">
 
-                                    <span>ANSWER</span>
+                                    <span>
+                                        ANSWER
+                                    </span>
 
                                     <h2 id="flashcardAnswer">
                                         —
                                     </h2>
 
                                 </div>
+
 
                             </div>
 
@@ -620,17 +1103,27 @@
 
                         <div class="flashcard-controls">
 
-                            <button class="secondary-btn" onclick="previousFlashcard()">
+
+                            <button
+                                class="secondary-btn"
+                                onclick="previousFlashcard()"
+                            >
                                 ← Previous
                             </button>
+
 
                             <span id="flashcardCounter">
                                 1 / 1
                             </span>
 
-                            <button class="secondary-btn" onclick="nextFlashcard()">
+
+                            <button
+                                class="secondary-btn"
+                                onclick="nextFlashcard()"
+                            >
                                 Next →
                             </button>
+
 
                         </div>
 
@@ -639,15 +1132,26 @@
                 </div>
 
 
+                <!-- REVIEW ACTIONS -->
+
                 <div class="review-actions">
 
-                    <button class="primary-btn" onclick="showPage('quizPage')">
+
+                    <button
+                        class="primary-btn"
+                        onclick="showPage('quizPage')"
+                    >
                         📝 Take Quiz
                     </button>
 
-                    <button class="secondary-btn" onclick="showPage('plannerPage')">
+
+                    <button
+                        class="secondary-btn"
+                        onclick="showPage('plannerPage')"
+                    >
                         📅 Make Study Plan
                     </button>
+
 
                 </div>
 
@@ -660,60 +1164,103 @@
              QUIZ PAGE
         ========================== -->
 
-        <section id="quizPage" class="page">
+        <section
+            id="quizPage"
+            class="page"
+        >
 
             <div class="page-heading">
 
                 <div>
-                    <p class="mini-label">TEST YOURSELF</p>
 
-                    <h1>Quick Quiz 📝</h1>
+                    <p class="mini-label">
+                        TEST YOURSELF
+                    </p>
+
+                    <h1>
+                        Quick Quiz 📝
+                    </h1>
 
                     <p>
-                        Answer questions based on your uploaded material.
+                        Test yourself using the reviewer you created.
                     </p>
+
                 </div>
 
             </div>
 
 
-            <div id="quizEmpty" class="empty-review">
+            <!-- EMPTY QUIZ -->
 
-                <div>📝</div>
+            <div
+                id="quizEmpty"
+                class="empty-review"
+            >
 
-                <h2>No quiz yet</h2>
+                <div>
+                    📝
+                </div>
+
+                <h2>
+                    No quiz yet
+                </h2>
 
                 <p>
-                    Upload notes and create a Magic Review first.
+                    Create a reviewer first and ReviewFirst
+                    will automatically make your quiz.
                 </p>
 
-                <button class="primary-btn" onclick="showPage('uploadPage')">
+                <button
+                    class="primary-btn"
+                    onclick="showPage('uploadPage')"
+                >
                     Create Reviewer
                 </button>
 
             </div>
 
 
-            <div id="quizContent" class="quiz-container hidden">
+            <!-- QUIZ -->
+
+            <div
+                id="quizContent"
+                class="quiz-container hidden"
+            >
+
 
                 <div class="quiz-top">
 
                     <div>
-                        <span id="quizTopicLabel">Topic</span>
+
+                        <span id="quizTopicLabel">
+                            Topic
+                        </span>
+
                         <strong id="questionNumber">
                             Question 1 of 5
                         </strong>
+
                     </div>
 
+
                     <div class="score-pill">
-                        Score: <span id="quizScore">0</span>
+
+                        Score:
+                        <span id="quizScore">
+                            0
+                        </span>
+
                     </div>
 
                 </div>
 
 
                 <div class="quiz-progress">
-                    <div id="quizProgressBar"></div>
+
+                    <div
+                        id="quizProgressBar"
+                    ></div>
+
                 </div>
 
 
@@ -727,8 +1274,12 @@
                         —
                     </h2>
 
-                    <div id="answerChoices" class="choices">
-                    </div>
+
+                    <div
+                        id="answerChoices"
+                        class="choices"
+                    ></div>
+
 
                     <button
                         id="nextQuestionBtn"
@@ -744,44 +1295,87 @@
             </div>
 
 
-            <div id="quizResult" class="quiz-result hidden">
+            <!-- QUIZ RESULT -->
 
-                <div class="result-icon">🎉</div>
+            <div
+                id="quizResult"
+                class="quiz-result hidden"
+            >
 
-                <p class="mini-label">QUIZ COMPLETE</p>
+                <div class="result-icon">
+                    🎉
+                </div>
+
+                <p class="mini-label">
+                    QUIZ COMPLETE
+                </p>
 
                 <h1>
+
                     You scored
-                    <span id="finalScore">0%</span>
+
+                    <span id="finalScore">
+                        0%
+                    </span>
+
                 </h1>
+
 
                 <p id="resultMessage">
                     Great job!
                 </p>
 
+
                 <div class="result-stats">
 
-                    <div>
-                        <strong id="correctAnswers">0</strong>
-                        <span>Correct</span>
-                    </div>
 
                     <div>
-                        <strong id="wrongAnswers">0</strong>
-                        <span>Need Review</span>
+
+                        <strong id="correctAnswers">
+                            0
+                        </strong>
+
+                        <span>
+                            Correct
+                        </span>
+
                     </div>
+
+
+                    <div>
+
+                        <strong id="wrongAnswers">
+                            0
+                        </strong>
+
+                        <span>
+                            Need Review
+                        </span>
+
+                    </div>
+
 
                 </div>
 
+
                 <div class="result-actions">
 
-                    <button class="primary-btn" onclick="showPage('weakPage')">
+
+                    <button
+                        class="primary-btn"
+                        onclick="showPage('weakPage')"
+                    >
                         🧠 See Weak Topics
                     </button>
 
-                    <button class="secondary-btn" onclick="restartQuiz()">
+
+                    <button
+                        class="secondary-btn"
+                        onclick="restartQuiz()"
+                    >
                         Try Again
                     </button>
+
 
                 </div>
 
@@ -794,18 +1388,28 @@
              WEAK TOPICS
         ========================== -->
 
-        <section id="weakPage" class="page">
+        <section
+            id="weakPage"
+            class="page"
+        >
 
             <div class="page-heading">
 
                 <div>
-                    <p class="mini-label">KNOW WHAT TO REVIEW</p>
 
-                    <h1>Weak Topics 🧠</h1>
+                    <p class="mini-label">
+                        KNOW WHAT TO REVIEW
+                    </p>
+
+                    <h1>
+                        Weak Topics 🧠
+                    </h1>
 
                     <p>
-                        ReviewFirst uses your quiz answers to help identify what needs more attention.
+                        ReviewFirst uses your quiz answers
+                        to help identify what needs more attention.
                     </p>
+
                 </div>
 
             </div>
@@ -815,9 +1419,12 @@
 
                 <div class="weak-overview">
 
+
                     <div class="weak-score-card">
 
-                        <span>Current Topic</span>
+                        <span>
+                            Current Topic
+                        </span>
 
                         <h2 id="weakTopicName">
                             No topic yet
@@ -829,22 +1436,42 @@
 
                     </div>
 
+
                     <div class="focus-card">
-                        <span>🎯 Focus Level</span>
-                        <strong id="focusLevel">—</strong>
+
+                        <span>
+                            🎯 Focus Level
+                        </span>
+
+                        <strong id="focusLevel">
+                            —
+                        </strong>
+
                     </div>
+
 
                 </div>
 
 
-                <div id="weakList" class="weak-list">
+                <div
+                    id="weakList"
+                    class="weak-list"
+                >
 
                     <div class="empty-state">
-                        <div>🌷</div>
-                        <h3>No weak topics yet</h3>
+
+                        <div>
+                            🌷
+                        </div>
+
+                        <h3>
+                            No weak topics yet
+                        </h3>
+
                         <p>
                             Your weak topics will appear after your quiz.
                         </p>
+
                     </div>
 
                 </div>
@@ -858,18 +1485,28 @@
              PLANNER PAGE
         ========================== -->
 
-        <section id="plannerPage" class="page">
+        <section
+            id="plannerPage"
+            class="page"
+        >
 
             <div class="page-heading">
 
                 <div>
-                    <p class="mini-label">STUDY SMARTER</p>
 
-                    <h1>Smart Study Planner 📅</h1>
+                    <p class="mini-label">
+                        STUDY SMARTER
+                    </p>
+
+                    <h1>
+                        Smart Study Planner 📅
+                    </h1>
 
                     <p>
-                        Choose how much time you have and ReviewFirst will organize your review.
+                        Choose how much time you have and
+                        ReviewFirst will organize your review.
                     </p>
+
                 </div>
 
             </div>
@@ -877,34 +1514,75 @@
 
             <div class="planner-time">
 
-                <button class="time-option active" onclick="setStudyTime(15, this)">
-                    <strong>15</strong>
-                    <span>minutes</span>
+
+                <button
+                    class="time-option active"
+                    onclick="setStudyTime(15, this)"
+                >
+
+                    <strong>
+                        15
+                    </strong>
+
+                    <span>
+                        minutes
+                    </span>
+
                 </button>
 
-                <button class="time-option" onclick="setStudyTime(30, this)">
-                    <strong>30</strong>
-                    <span>minutes</span>
+
+                <button
+                    class="time-option"
+                    onclick="setStudyTime(30, this)"
+                >
+
+                    <strong>
+                        30
+                    </strong>
+
+                    <span>
+                        minutes
+                    </span>
+
                 </button>
 
-                <button class="time-option" onclick="setStudyTime(60, this)">
-                    <strong>1</strong>
-                    <span>hour</span>
+
+                <button
+                    class="time-option"
+                    onclick="setStudyTime(60, this)"
+                >
+
+                    <strong>
+                        1
+                    </strong>
+
+                    <span>
+                        hour
+                    </span>
+
                 </button>
+
 
             </div>
 
 
             <div class="planner-card">
 
+
                 <div class="planner-header">
 
                     <div>
-                        <span>🌷 YOUR PLAN</span>
+
+                        <span>
+                            🌷 YOUR PLAN
+                        </span>
+
                         <h2 id="plannerTitle">
                             15-Minute Study Plan
                         </h2>
+
                     </div>
+
 
                     <div class="planner-clock">
                         ⏱️
@@ -913,8 +1591,10 @@
                 </div>
 
 
-                <div id="plannerTasks" class="planner-tasks">
-                </div>
+                <div
+                    id="plannerTasks"
+                    class="planner-tasks"
+                ></div>
 
 
                 <div class="planner-footer">
@@ -923,7 +1603,10 @@
                         💗 Small progress is still progress.
                     </span>
 
-                    <button class="primary-btn" onclick="markPlanDone()">
+                    <button
+                        class="primary-btn"
+                        onclick="markPlanDone()"
+                    >
                         ✓ Start Plan
                     </button>
 
@@ -938,21 +1621,35 @@
              ACTIVITIES PAGE
         ========================== -->
 
-        <section id="activitiesPage" class="page">
+        <section
+            id="activitiesPage"
+            class="page"
+        >
 
             <div class="page-heading">
 
                 <div>
-                    <p class="mini-label">DON'T FORGET ♡</p>
 
-                    <h1>Activities & Reminders 🔔</h1>
+                    <p class="mini-label">
+                        DON'T FORGET ♡
+                    </p>
+
+                    <h1>
+                        Activities & Reminders 🔔
+                    </h1>
 
                     <p>
-                        Add your school activities, deadlines, quizzes, and tasks.
+                        Add your school activities,
+                        deadlines, quizzes, and tasks.
                     </p>
+
                 </div>
 
-                <button class="primary-btn" onclick="openActivityModal()">
+
+                <button
+                    class="primary-btn"
+                    onclick="openActivityModal()"
+                >
                     + Add Activity
                 </button>
 
@@ -966,11 +1663,16 @@
                 </div>
 
                 <div>
-                    <strong>Never forget an activity again.</strong>
+
+                    <strong>
+                        Never forget an activity again.
+                    </strong>
 
                     <p>
-                        ReviewFirst can remind you before your scheduled school tasks.
+                        ReviewFirst helps you keep track
+                        of your scheduled school tasks.
                     </p>
+
                 </div>
 
             </div>
@@ -978,32 +1680,54 @@
 
             <div class="activity-filter">
 
-                <button class="filter-btn active" onclick="filterActivities('all', this)">
+
+                <button
+                    class="filter-btn active"
+                    onclick="filterActivities('all', this)"
+                >
                     All
                 </button>
 
-                <button class="filter-btn" onclick="filterActivities('today', this)">
+
+                <button
+                    class="filter-btn"
+                    onclick="filterActivities('today', this)"
+                >
                     Today
                 </button>
 
-                <button class="filter-btn" onclick="filterActivities('tomorrow', this)">
+
+                <button
+                    class="filter-btn"
+                    onclick="filterActivities('tomorrow', this)"
+                >
                     Tomorrow
                 </button>
 
-                <button class="filter-btn" onclick="filterActivities('upcoming', this)">
+
+                <button
+                    class="filter-btn"
+                    onclick="filterActivities('upcoming', this)"
+                >
                     Upcoming
                 </button>
 
-                <button class="filter-btn" onclick="filterActivities('completed', this)">
+
+                <button
+                    class="filter-btn"
+                    onclick="filterActivities('completed', this)"
+                >
                     Completed
                 </button>
 
-            </div>
-
-
-            <div id="activitiesList" class="activities-list">
 
             </div>
+
+
+            <div
+                id="activitiesList"
+                class="activities-list"
+            ></div>
 
         </section>
 
@@ -1016,17 +1740,36 @@
      PROFILE MODAL
 ========================= -->
 
-<div id="profileModal" class="modal">
+<div
+    id="profileModal"
+    class="modal"
+>
 
     <div class="modal-card">
 
-        <button class="modal-close" onclick="closeProfileModal()">×</button>
 
-        <div class="modal-icon">🌷</div>
+        <button
+            class="modal-close"
+            onclick="closeProfileModal()"
+        >
+            ×
+        </button>
 
-        <h2>Edit Profile</h2>
 
-        <p>Change the name ReviewFirst uses for you.</p>
+        <div class="modal-icon">
+            🌷
+        </div>
+
+
+        <h2>
+            Edit Profile
+        </h2>
+
+
+        <p>
+            Change the name ReviewFirst uses for you.
+        </p>
+
 
         <input
             id="editNameInput"
@@ -1035,7 +1778,11 @@
             maxlength="30"
         >
 
-        <button class="primary-btn" onclick="changeName()">
+
+        <button
+            class="primary-btn"
+            onclick="changeName()"
+        >
             Save Name
         </button>
 
@@ -1048,22 +1795,40 @@
      ACTIVITY MODAL
 ========================= -->
 
-<div id="activityModal" class="modal">
+<div
+    id="activityModal"
+    class="modal"
+>
 
     <div class="modal-card activity-modal-card">
 
-        <button class="modal-close" onclick="closeActivityModal()">×</button>
 
-        <div class="modal-icon">🔔</div>
+        <button
+            class="modal-close"
+            onclick="closeActivityModal()"
+        >
+            ×
+        </button>
 
-        <h2>Add Activity</h2>
+
+        <div class="modal-icon">
+            🔔
+        </div>
+
+
+        <h2>
+            Add Activity
+        </h2>
+
 
         <p>
             Tell ReviewFirst what you need to do.
         </p>
 
 
-        <label>Activity name</label>
+        <label>
+            Activity name
+        </label>
 
         <input
             id="activityName"
@@ -1072,7 +1837,9 @@
         >
 
 
-        <label>Date</label>
+        <label>
+            Date
+        </label>
 
         <input
             id="activityDate"
@@ -1081,7 +1848,9 @@
         >
 
 
-        <label>Time</label>
+        <label>
+            Time
+        </label>
 
         <input
             id="activityTime"
@@ -1090,9 +1859,15 @@
         >
 
 
-        <label>Remind me</label>
+        <label>
+            Remind me
+        </label>
 
-        <select id="activityReminder" class="text-input">
+
+        <select
+            id="activityReminder"
+            class="text-input"
+        >
 
             <option value="0">
                 At activity time
@@ -1110,7 +1885,10 @@
                 30 minutes before
             </option>
 
-            <option value="60" selected>
+            <option
+                value="60"
+                selected
+            >
                 1 hour before
             </option>
 
@@ -1121,7 +1899,10 @@
         </select>
 
 
-        <button class="primary-btn" onclick="saveActivity()">
+        <button
+            class="primary-btn"
+            onclick="saveActivity()"
+        >
             🔔 Save Reminder
         </button>
 
@@ -1130,7 +1911,12 @@
 </div>
 
 
+<!-- =========================
+     JAVASCRIPT
+========================= -->
+
 <script src="script.js"></script>
 
 </body>
 </html>
+```

@@ -1,6 +1,7 @@
 /* =========================================================
    REVIEWFIRST
-   Main JavaScript
+   Student-created reviewer + automatic quiz generator
+   Works locally. No OpenAI/API key/server required.
 ========================================================= */
 
 
@@ -8,10 +9,9 @@
    GLOBAL DATA
 ========================================================= */
 
-let currentFile = null;
-let extractedText = "";
-
-let reviewData = {
+let reviewData = JSON.parse(
+    localStorage.getItem("reviewFirstData") || "null"
+) || {
     title: "",
     summary: "",
     keyPoints: [],
@@ -25,13 +25,15 @@ let currentFlashcard = 0;
 let quizIndex = 0;
 let quizScore = 0;
 let selectedAnswer = null;
-let quizWrongQuestions = [];
+let quizWrongItems = [];
 
-let studyMinutes = 15;
+let studyTime = 15;
 
 let activities = JSON.parse(
-    localStorage.getItem("reviewfirstActivities") || "[]"
+    localStorage.getItem("reviewFirstActivities") || "[]"
 );
+
+const $ = id => document.getElementById(id);
 
 
 /* =========================================================
@@ -39,214 +41,266 @@ let activities = JSON.parse(
 ========================================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
-
-    initializeDate();
-
-    initializeUploadDropZone();
-
-    loadUser();
-
-    renderActivities();
-
-    updateDashboard();
-
-    requestNotificationPermission();
-
-    checkReminderTimers();
-
-    setInterval(checkReminderTimers, 30000);
-
+    initializeApp();
 });
 
 
-/* =========================================================
-   USER / PROFILE
-========================================================= */
+function initializeApp() {
 
-function loadUser() {
+    updateGreeting();
+    updateDate();
 
-    const savedName = localStorage.getItem("reviewfirstName");
+    loadProfile();
 
-    if (savedName) {
+    renderSavedReview();
+    renderActivities();
+    updateDashboard();
+    renderPlanner();
 
-        applyName(savedName);
+    const nameInput = $("nameInput");
 
-        document.getElementById("welcomeScreen").classList.remove("active");
-        document.getElementById("profileScreen").classList.remove("active");
-
-        document.getElementById("appScreen").classList.add("active");
-
-    } else {
-
-        document.getElementById("welcomeScreen").classList.add("active");
-
+    if (nameInput) {
+        nameInput.addEventListener("keydown", event => {
+            if (event.key === "Enter") {
+                saveName();
+            }
+        });
     }
 
+    const editNameInput = $("editNameInput");
+
+    if (editNameInput) {
+        editNameInput.addEventListener("keydown", event => {
+            if (event.key === "Enter") {
+                changeName();
+            }
+        });
+    }
+
+    document.addEventListener("keydown", event => {
+
+        if (event.key === "Escape") {
+            closeProfileModal();
+            closeActivityModal();
+        }
+
+    });
 }
 
 
+/* =========================================================
+   PROFILE
+========================================================= */
+
 function showProfileSetup() {
 
-    document.getElementById("welcomeScreen").classList.remove("active");
-
-    document.getElementById("profileScreen").classList.add("active");
+    $("welcomeScreen")?.classList.remove("active");
+    $("profileScreen")?.classList.add("active");
 
     setTimeout(() => {
-        document.getElementById("nameInput").focus();
-    }, 300);
-
+        $("nameInput")?.focus();
+    }, 250);
 }
 
 
 function saveName() {
 
-    const input = document.getElementById("nameInput");
-
-    let name = input.value.trim();
+    const name = $("nameInput")?.value.trim();
 
     if (!name) {
-
-        showToast(
-            "Please enter your name 🌷",
-            "We need your name to personalize ReviewFirst."
-        );
-
+        showToast("Please enter your name first. ♡");
         return;
     }
 
-    localStorage.setItem("reviewfirstName", name);
-
-    applyName(name);
-
-    document.getElementById("profileScreen").classList.remove("active");
-
-    document.getElementById("appScreen").classList.add("active");
-
-    updateDashboard();
-
-    showToast(
-        `Welcome, ${name}! ♡`,
-        "Your study space is ready."
+    localStorage.setItem(
+        "reviewFirstName",
+        name
     );
 
+    openApp();
 }
 
 
-function applyName(name) {
+function loadProfile() {
 
-    document.getElementById("dashboardName").textContent = name;
-    document.getElementById("sidebarName").textContent = name;
+    const name =
+        localStorage.getItem("reviewFirstName");
 
-    const hour = new Date().getHours();
+    if (!name) return;
 
-    let greeting = "Good evening";
+    $("welcomeScreen")?.classList.remove("active");
+    $("profileScreen")?.classList.remove("active");
+    $("appScreen")?.classList.add("active");
 
-    if (hour < 12) {
-        greeting = "Good morning";
-    } else if (hour < 18) {
-        greeting = "Good afternoon";
-    }
+    setName(name);
+}
 
-    document.getElementById("helloText").textContent =
-        `${greeting}, ${name} 🌷`;
 
+function openApp() {
+
+    $("welcomeScreen")?.classList.remove("active");
+    $("profileScreen")?.classList.remove("active");
+    $("appScreen")?.classList.add("active");
+
+    setName(
+        localStorage.getItem("reviewFirstName")
+        || "Student"
+    );
+
+    updateDashboard();
+}
+
+
+function setName(name) {
+
+    [
+        "dashboardName",
+        "sidebarName"
+    ].forEach(id => {
+
+        if ($(id)) {
+            $(id).textContent = name;
+        }
+
+    });
 }
 
 
 function openProfileModal() {
 
-    const savedName =
-        localStorage.getItem("reviewfirstName") || "";
+    const current =
+        localStorage.getItem("reviewFirstName")
+        || "";
 
-    document.getElementById("editNameInput").value = savedName;
+    if ($("editNameInput")) {
+        $("editNameInput").value = current;
+    }
 
-    document.getElementById("profileModal").classList.add("show");
+    $("profileModal")?.classList.add("show");
 
+    setTimeout(() => {
+        $("editNameInput")?.focus();
+    }, 100);
 }
 
 
 function closeProfileModal() {
 
-    document.getElementById("profileModal").classList.remove("show");
+    $("profileModal")?.classList.remove("show");
 
 }
 
 
 function changeName() {
 
-    const input =
-        document.getElementById("editNameInput");
-
-    const name = input.value.trim();
+    const name =
+        $("editNameInput")?.value.trim();
 
     if (!name) {
-
-        showToast(
-            "Name cannot be empty ♡",
-            "Please enter a name."
-        );
-
+        showToast("Please enter a name. ♡");
         return;
     }
 
-    localStorage.setItem("reviewfirstName", name);
+    localStorage.setItem(
+        "reviewFirstName",
+        name
+    );
 
-    applyName(name);
+    setName(name);
 
     closeProfileModal();
 
     showToast(
-        "Profile updated 🌷",
-        `I'll call you ${name} from now on.`
+        "Your profile was updated. 🌷"
     );
-
 }
 
 
 /* =========================================================
-   PAGE NAVIGATION
+   NAVIGATION
 ========================================================= */
 
-function showPage(pageId, clickedButton = null) {
+function showPage(pageId, button = null) {
 
-    document.querySelectorAll(".page").forEach(page => {
-        page.classList.remove("active-page");
-    });
+    document
+        .querySelectorAll(".page")
+        .forEach(page => {
+            page.classList.remove(
+                "active-page"
+            );
+        });
 
-    const page = document.getElementById(pageId);
+    const page = $(pageId);
 
     if (page) {
-        page.classList.add("active-page");
+        page.classList.add(
+            "active-page"
+        );
     }
 
-    document.querySelectorAll(".nav-btn").forEach(btn => {
-        btn.classList.remove("active");
-    });
+    if (button) {
 
-    if (clickedButton) {
+        document
+            .querySelectorAll(".nav-btn")
+            .forEach(btn => {
+                btn.classList.remove(
+                    "active"
+                );
+            });
 
-        clickedButton.classList.add("active");
+        button.classList.add("active");
 
     } else {
 
-        const matchingButton =
-            document.querySelector(
-                `.nav-btn[onclick*="${pageId}"]`
-            );
+        document
+            .querySelectorAll(".nav-btn")
+            .forEach(btn => {
 
-        if (matchingButton) {
-            matchingButton.classList.add("active");
+                const onclick =
+                    btn.getAttribute("onclick")
+                    || "";
+
+                btn.classList.toggle(
+                    "active",
+                    onclick.includes(pageId)
+                );
+
+            });
+
+    }
+
+    if (pageId === "quizPage") {
+
+        if (reviewData.quiz?.length) {
+
+            if (
+                $("quizContent")?.classList.contains("hidden")
+                &&
+                $("quizResult")?.classList.contains("hidden")
+            ) {
+                startQuiz();
+            }
+
         }
 
     }
 
-    document.querySelector(".sidebar")?.classList.remove("open");
+    if (pageId === "weakPage") {
+        renderWeakTopics();
+    }
+
+    if (pageId === "plannerPage") {
+        renderPlanner();
+    }
+
+    if (pageId === "activitiesPage") {
+        renderActivities();
+    }
 
     window.scrollTo({
         top: 0,
         behavior: "smooth"
     });
-
 }
 
 
@@ -254,1069 +308,344 @@ function toggleSidebar() {
 
     document
         .querySelector(".sidebar")
-        .classList.toggle("open");
+        ?.classList.toggle("open");
 
 }
 
 
 /* =========================================================
-   DATE
+   CREATE REVIEWER
 ========================================================= */
 
-function initializeDate() {
-
-    const now = new Date();
-
-    document.getElementById("currentDate").textContent =
-        now.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric"
-        });
-
-}
-
-
-/* =========================================================
-   UPLOAD
-========================================================= */
-
-function initializeUploadDropZone() {
-
-    const dropZone =
-        document.getElementById("dropZone");
-
-    if (!dropZone) return;
-
-    ["dragenter", "dragover"].forEach(eventName => {
-
-        dropZone.addEventListener(eventName, event => {
-
-            event.preventDefault();
-
-            dropZone.classList.add("dragging");
-
-        });
-
-    });
-
-    ["dragleave", "drop"].forEach(eventName => {
-
-        dropZone.addEventListener(eventName, event => {
-
-            event.preventDefault();
-
-            dropZone.classList.remove("dragging");
-
-        });
-
-    });
-
-
-    dropZone.addEventListener("drop", event => {
-
-        const file = event.dataTransfer.files[0];
-
-        if (file) {
-            handleFile(file);
-        }
-
-    });
-
-}
-
-
-function handleFile(file) {
-
-    if (!file) return;
-
-    const allowedTypes = [
-        "application/pdf",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        "application/vnd.ms-powerpoint",
-        "text/plain",
-        "image/jpeg",
-        "image/png"
-    ];
-
-    const extension =
-        file.name.split(".").pop().toLowerCase();
-
-    const allowedExtensions =
-        ["pdf", "docx", "pptx", "ppt", "txt", "jpg", "jpeg", "png"];
-
-    if (
-        !allowedTypes.includes(file.type) &&
-        !allowedExtensions.includes(extension)
-    ) {
-
-        showToast(
-            "File not supported ♡",
-            "Please upload PDF, DOCX, PPTX, TXT, JPG, or PNG."
-        );
-
-        return;
-    }
-
-    currentFile = file;
-
-    document.getElementById("fileName").textContent =
-        file.name;
-
-    document.getElementById("fileSize").textContent =
-        formatFileSize(file.size);
-
-    document
-        .getElementById("selectedFile")
-        .classList.remove("hidden");
-
-    document
-        .getElementById("magicReviewBtn")
-        .classList.remove("hidden");
-
-}
-
-
-function removeFile() {
-
-    currentFile = null;
-
-    extractedText = "";
-
-    document
-        .getElementById("selectedFile")
-        .classList.add("hidden");
-
-    document
-        .getElementById("magicReviewBtn")
-        .classList.add("hidden");
-
-    document.getElementById("fileInput").value = "";
-
-}
-
-
-function formatFileSize(bytes) {
-
-    if (bytes < 1024) {
-        return bytes + " B";
-    }
-
-    if (bytes < 1024 * 1024) {
-        return (bytes / 1024).toFixed(1) + " KB";
-    }
-
-    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-
-}
-
-
-/* =========================================================
-   MAGIC REVIEW
-========================================================= */
-
-async function startMagicReview() {
-
-    if (!currentFile) {
-
-        showToast(
-            "Upload something first 📚",
-            "Choose your notes before starting Magic Review."
-        );
-
-        return;
-    }
-
-    const processingBox =
-        document.getElementById("processingBox");
-
-    const magicBtn =
-        document.getElementById("magicReviewBtn");
-
-    processingBox.classList.remove("hidden");
-    magicBtn.classList.add("hidden");
-
-    const progressBar =
-        document.getElementById("progressBar");
+function createMyReviewer() {
 
     const title =
-        document.getElementById("processingTitle");
-
-    const text =
-        document.getElementById("processingText");
-
-    try {
-
-        progressBar.style.width = "10%";
-
-        title.textContent = "Opening your material...";
-        text.textContent = "ReviewFirst is preparing your file. ♡";
-
-        await sleep(500);
-
-        progressBar.style.width = "30%";
-
-        title.textContent = "Reading your notes...";
-        text.textContent = "Looking for the important information.";
-
-        extractedText =
-            await extractTextFromFile(currentFile);
-
-        if (!extractedText || extractedText.trim().length < 30) {
-
-            throw new Error(
-                "Not enough readable text was found."
-            );
-
-        }
-
-        progressBar.style.width = "60%";
-
-        title.textContent = "Understanding your topic...";
-        text.textContent =
-            "Creating a summary based on your uploaded material.";
-
-        await sleep(700);
-
-        reviewData =
-            buildReview(extractedText, currentFile.name);
-
-        progressBar.style.width = "85%";
-
-        title.textContent = "Building your reviewer...";
-        text.textContent =
-            "Preparing key points, terms, flashcards, and quiz questions.";
-
-        await sleep(700);
-
-        progressBar.style.width = "100%";
-
-        await sleep(500);
-
-        saveReview();
-
-        renderReviewer();
-
-        renderQuiz();
-
-        renderWeakTopics();
-
-        renderPlanner();
-
-        updateDashboard();
-
-        processingBox.classList.add("hidden");
-
-        showPage("reviewerPage");
-
-        showToast(
-            "Magic Review is ready! ✨",
-            `I created a reviewer from ${currentFile.name}.`
-        );
-
-    } catch (error) {
-
-        console.error(error);
-
-        processingBox.classList.add("hidden");
-
-        magicBtn.classList.remove("hidden");
-
-        showToast(
-            "I couldn't read that file ♡",
-            error.message ||
-            "Try uploading a clearer file."
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   FILE EXTRACTION
-========================================================= */
-
-async function extractTextFromFile(file) {
-
-    const extension =
-        file.name.split(".").pop().toLowerCase();
-
-
-    /* TEXT */
-
-    if (extension === "txt") {
-
-        return await file.text();
-
-    }
-
-
-    /* IMAGE OCR */
-
-    if (
-        ["jpg", "jpeg", "png"].includes(extension)
-    ) {
-
-        return await extractImageText(file);
-
-    }
-
-
-    /* PDF */
-
-    if (extension === "pdf") {
-
-        return await extractPDFText(file);
-
-    }
-
-
-    /* DOCX */
-
-    if (extension === "docx") {
-
-        return await extractDOCXText(file);
-
-    }
-
-
-    /* PPTX */
-
-    if (extension === "pptx") {
-
-        return await extractPPTXText(file);
-
-    }
-
-
-    throw new Error(
-        "This file format is not supported."
-    );
-
-}
-
-
-/* =========================================================
-   IMAGE OCR
-========================================================= */
-
-async function extractImageText(file) {
-
-    const result =
-        await Tesseract.recognize(
-            file,
-            "eng",
-            {
-                logger: message => {
-
-                    if (
-                        message.status === "recognizing text" &&
-                        message.progress
-                    ) {
-
-                        const percent =
-                            Math.round(
-                                message.progress * 100
-                            );
-
-                        document.getElementById(
-                            "progressBar"
-                        ).style.width =
-                            Math.min(55, percent) + "%";
-
-                    }
-
-                }
-            }
-        );
-
-    return result.data.text;
-
-}
-
-
-/* =========================================================
-   PDF
-========================================================= */
-
-async function extractPDFText(file) {
-
-    const arrayBuffer =
-        await file.arrayBuffer();
-
-    const pdf =
-        await pdfjsLib.getDocument({
-            data: arrayBuffer
-        }).promise;
-
-    let text = "";
-
-    for (
-        let pageNumber = 1;
-        pageNumber <= pdf.numPages;
-        pageNumber++
-    ) {
-
-        const page =
-            await pdf.getPage(pageNumber);
-
-        const content =
-            await page.getTextContent();
-
-        const pageText =
-            content.items
-                .map(item => item.str)
-                .join(" ");
-
-        text += "\n" + pageText;
-
-    }
-
-    return text;
-
-}
-
-
-/* =========================================================
-   DOCX
-========================================================= */
-
-async function extractDOCXText(file) {
-
-    const arrayBuffer =
-        await file.arrayBuffer();
-
-    const result =
-        await mammoth.extractRawText({
-            arrayBuffer
-        });
-
-    return result.value;
-
-}
-
-
-/* =========================================================
-   PPTX
-========================================================= */
-
-async function extractPPTXText(file) {
-
-    const arrayBuffer =
-        await file.arrayBuffer();
-
-    const zip =
-        await JSZip.loadAsync(arrayBuffer);
-
-    let allText = "";
-
-    const slideFiles =
-        Object.keys(zip.files)
-            .filter(path =>
-                /^ppt\/slides\/slide\d+\.xml$/.test(path)
-            )
-            .sort((a, b) => {
-
-                const numA =
-                    parseInt(
-                        a.match(/slide(\d+)/)[1]
-                    );
-
-                const numB =
-                    parseInt(
-                        b.match(/slide(\d+)/)[1]
-                    );
-
-                return numA - numB;
-
-            });
-
-
-    for (const slidePath of slideFiles) {
-
-        const xml =
-            await zip
-                .file(slidePath)
-                .async("text");
-
-        const parser =
-            new DOMParser();
-
-        const xmlDoc =
-            parser.parseFromString(
-                xml,
-                "application/xml"
-            );
-
-        const textNodes =
-            [...xmlDoc.getElementsByTagName("a:t")];
-
-        const slideText =
-            textNodes
-                .map(node => node.textContent)
-                .join(" ");
-
-        allText += "\n" + slideText;
-
-    }
-
-    return allText;
-
-}
-
-
-/* =========================================================
-   REVIEW GENERATOR
-========================================================= */
-
-function buildReview(text, fileName) {
-
-    const cleanText =
-        cleanExtractedText(text);
-
-    const sentences =
-        splitSentences(cleanText);
-
-    const title =
-        detectTopic(cleanText, fileName);
-
-    const keyPoints =
-        generateKeyPoints(sentences);
-
-    const terms =
-        extractImportantTerms(cleanText, sentences);
+        $("reviewTopic")?.value.trim();
 
     const summary =
-        generateSummary(sentences, keyPoints);
+        $("reviewSummary")?.value.trim();
 
-    const flashcards =
-        generateFlashcards(keyPoints, terms, sentences);
+    const keyPointsText =
+        $("reviewKeyPoints")?.value.trim();
 
-    const quiz =
-        generateQuiz(keyPoints, terms, sentences);
-
-    return {
-        title,
-        summary,
-        keyPoints,
-        terms,
-        flashcards,
-        quiz
-    };
-
-}
+    const termsText =
+        $("reviewTerms")?.value.trim();
 
 
-/* =========================================================
-   TEXT CLEANING
-========================================================= */
-
-function cleanExtractedText(text) {
-
-    return text
-        .replace(/\r/g, " ")
-        .replace(/\t/g, " ")
-        .replace(/\s+/g, " ")
-        .replace(/[ ]{2,}/g, " ")
-        .trim();
-
-}
-
-
-function splitSentences(text) {
-
-    return text
-        .split(/(?<=[.!?])\s+/)
-        .map(sentence => sentence.trim())
-        .filter(sentence =>
-            sentence.length >= 35
-        );
-
-}
-
-
-/* =========================================================
-   TOPIC DETECTION
-========================================================= */
-
-function detectTopic(text, fileName) {
-
-    const cleanedName =
-        fileName
-            .replace(/\.[^/.]+$/, "")
-            .replace(/[_-]/g, " ")
-            .trim();
-
-    const genericNames = [
-        "notes",
-        "note",
-        "document",
-        "file",
-        "image",
-        "screenshot",
-        "review",
-        "reviewer"
-    ];
+    /* -----------------------------------------
+       BASIC VALIDATION
+    ----------------------------------------- */
 
     if (
-        cleanedName &&
-        !genericNames.includes(
-            cleanedName.toLowerCase()
-        )
+        !title ||
+        !summary ||
+        !keyPointsText
     ) {
 
-        return titleCase(cleanedName);
-
-    }
-
-
-    const firstLines =
-        text
-            .split(/[.!?\n]/)
-            .map(x => x.trim())
-            .filter(x =>
-                x.length >= 5 &&
-                x.length <= 100
-            );
-
-    if (firstLines.length > 0) {
-
-        return titleCase(
-            firstLines[0]
-                .replace(/^(chapter|lesson|topic)\s*\d*[:.-]?\s*/i, "")
-                .trim()
+        showToast(
+            "Please complete the topic, summary, and key points. ♡"
         );
 
+        return;
     }
 
-    return "Your Study Topic";
 
+    const keyPoints =
+        parseList(keyPointsText);
+
+    const terms =
+        parseTerms(termsText);
+
+
+    if (keyPoints.length < 2) {
+
+        showToast(
+            "Add at least 2 key points so ReviewFirst can make a better quiz. 💗"
+        );
+
+        return;
+    }
+
+
+    if (terms.length === 0) {
+
+        showToast(
+            "Add at least 1 important term with its meaning. 💡"
+        );
+
+        return;
+    }
+
+
+    /* -----------------------------------------
+       CREATE FLASHCARDS
+    ----------------------------------------- */
+
+    const flashcards =
+        terms.map(item => ({
+
+            question:
+                `What is ${item.term}?`,
+
+            answer:
+                item.definition
+
+        }));
+
+
+    /* -----------------------------------------
+       CREATE QUIZ
+    ----------------------------------------- */
+
+    const quiz =
+        buildQuiz(
+            title,
+            summary,
+            keyPoints,
+            terms
+        );
+
+
+    /* -----------------------------------------
+       SAVE REVIEW
+    ----------------------------------------- */
+
+    reviewData = {
+
+        title,
+
+        summary,
+
+        keyPoints,
+
+        terms,
+
+        flashcards,
+
+        quiz
+
+    };
+
+
+    localStorage.setItem(
+        "reviewFirstData",
+        JSON.stringify(reviewData)
+    );
+
+
+    /* -----------------------------------------
+       RESET OLD QUIZ RESULTS
+    ----------------------------------------- */
+
+    localStorage.removeItem(
+        "reviewFirstLastScore"
+    );
+
+    localStorage.removeItem(
+        "reviewFirstWeakTopics"
+    );
+
+
+    currentFlashcard = 0;
+    quizIndex = 0;
+    quizScore = 0;
+    quizWrongItems = [];
+
+
+    /* -----------------------------------------
+       RENDER
+    ----------------------------------------- */
+
+    renderSavedReview();
+
+    updateDashboard();
+
+    renderWeakTopics();
+
+    resetQuizUI();
+
+
+    showToast(
+        `Your reviewer is ready! ${quiz.length} quiz questions created. ✨`
+    );
+
+
+    showPage("reviewerPage");
 }
 
 
 /* =========================================================
-   SUMMARY
+   PARSE KEY POINTS
 ========================================================= */
 
-function generateSummary(sentences, keyPoints) {
+function parseList(text) {
 
-    if (!sentences.length) {
+    return text
+        .split("\n")
 
-        return "There was not enough readable text to create a summary.";
+        .map(line => {
 
-    }
-
-    /*
-        This is an extractive summarizer.
-
-        Instead of inventing information, it selects
-        important sentences directly from the uploaded
-        material.
-    */
-
-    const scored =
-        sentences.map((sentence, index) => {
-
-            let score = 0;
-
-            const lower =
-                sentence.toLowerCase();
-
-            if (
-                /\b(is|are|means|refers to|defined as|known as)\b/
-                    .test(lower)
-            ) {
-                score += 3;
-            }
-
-            if (
-                /\b(because|therefore|important|main|purpose|function|process|used|helps|includes)\b/
-                    .test(lower)
-            ) {
-                score += 2;
-            }
-
-            if (
-                /\b(first|second|third|finally|however|for example)\b/
-                    .test(lower)
-            ) {
-                score += 1;
-            }
-
-            if (sentence.length >= 60) {
-                score += 1;
-            }
-
-            if (index < 5) {
-                score += 1;
-            }
-
-            return {
-                sentence,
-                score,
-                index
-            };
-
-        });
-
-
-    const selected =
-        scored
-            .sort((a, b) => b.score - a.score)
-            .slice(
-                0,
-                Math.min(
-                    6,
-                    Math.max(3, Math.ceil(sentences.length / 8))
+            return line
+                .replace(
+                    /^\s*[-•*]\s*/,
+                    ""
                 )
-            )
-            .sort((a, b) => a.index - b.index)
-            .map(item => item.sentence);
+                .replace(
+                    /^\s*\d+[.)]\s*/,
+                    ""
+                )
+                .trim();
 
+        })
 
-    return selected.join(" ");
-
+        .filter(Boolean);
 }
 
 
 /* =========================================================
-   KEY POINTS
+   PARSE TERMS
 ========================================================= */
 
-function generateKeyPoints(sentences) {
+function parseTerms(text) {
 
-    if (!sentences.length) {
+    if (!text) {
         return [];
     }
 
-    const scored =
-        sentences.map((sentence, index) => {
 
-            let score = 0;
+    return text
 
-            const lower =
-                sentence.toLowerCase();
+        .split("\n")
 
-            const importantWords = [
-                "important",
-                "main",
-                "purpose",
-                "function",
-                "process",
-                "definition",
-                "means",
-                "refers",
-                "because",
-                "therefore",
-                "includes",
-                "example",
-                "used",
-                "helps",
-                "causes",
-                "result"
-            ];
+        .map(line => line.trim())
 
-            importantWords.forEach(word => {
+        .filter(Boolean)
 
-                if (lower.includes(word)) {
-                    score++;
-                }
+        .map(line => {
 
-            });
-
-            if (index < 7) {
-                score += 1;
-            }
-
-            return {
-                sentence,
-                score
-            };
-
-        });
-
-
-    return scored
-        .sort((a, b) => b.score - a.score)
-        .slice(
-            0,
-            Math.min(8, sentences.length)
-        )
-        .map(item => item.sentence);
-
-}
-
-
-/* =========================================================
-   TERMS
-========================================================= */
-
-function extractImportantTerms(text, sentences) {
-
-    const terms = [];
-
-    /*
-        First look for definition patterns:
-        "X is..."
-        "X refers to..."
-        "X means..."
-    */
-
-    sentences.forEach(sentence => {
-
-        let match =
-            sentence.match(
-                /^([A-Z][A-Za-z0-9\s-]{2,40})\s+(?:is|are|refers to|means|is defined as)\s+(.{15,150})/i
-            );
-
-        if (match) {
-
-            const term =
-                match[1].trim();
-
-            const definition =
-                match[2]
-                    .replace(/[.;].*$/, "")
+            const clean =
+                line
+                    .replace(
+                        /^\s*[-•*]\s*/,
+                        ""
+                    )
+                    .replace(
+                        /^\s*\d+[.)]\s*/,
+                        ""
+                    )
                     .trim();
 
-            if (
-                term.length >= 3 &&
-                term.split(" ").length <= 7
-            ) {
 
-                terms.push({
-                    term,
-                    definition
-                });
-
-            }
-
-        }
-
-    });
-
-
-    /*
-        If definitions were not found,
-        use frequent meaningful words.
-    */
-
-    if (terms.length < 4) {
-
-        const words =
-            text
-                .toLowerCase()
-                .replace(/[^a-z0-9\s-]/g, " ")
-                .split(/\s+/)
-                .filter(word =>
-                    word.length >= 5
+            const match =
+                clean.match(
+                    /^(.+?)\s*(?:\s+[-–—:]\s+|\s*:\s*|\s+-\s+|\t+)(.+)$/
                 );
 
-        const stopWords = new Set([
-            "about",
-            "which",
-            "there",
-            "their",
-            "these",
-            "those",
-            "where",
-            "while",
-            "would",
-            "could",
-            "should",
-            "because",
-            "through",
-            "using",
-            "between",
-            "other",
-            "being",
-            "after",
-            "before",
-            "during",
-            "also",
-            "than",
-            "from",
-            "with",
-            "that",
-            "this",
-            "they",
-            "them",
-            "have",
-            "has",
-            "into",
-            "when",
-            "what",
-            "your",
-            "more",
-            "some",
-            "such"
-        ]);
 
-        const frequency = {};
+            if (match) {
 
-        words.forEach(word => {
+                return {
 
-            if (!stopWords.has(word)) {
+                    term:
+                        match[1].trim(),
 
-                frequency[word] =
-                    (frequency[word] || 0) + 1;
+                    definition:
+                        match[2].trim()
+
+                };
 
             }
 
-        });
 
+            return null;
 
-        const commonWords =
-            Object.entries(frequency)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 8);
+        })
 
-
-        commonWords.forEach(([word]) => {
-
-            const sentence =
-                sentences.find(s =>
-                    s.toLowerCase().includes(word)
-                );
-
-            if (sentence) {
-
-                terms.push({
-                    term: titleCase(word),
-                    definition: shortenSentence(sentence, 150)
-                });
-
-            }
-
-        });
-
-    }
-
-
-    const unique = [];
-
-    terms.forEach(item => {
-
-        if (
-            !unique.some(
-                x =>
-                    x.term.toLowerCase() ===
-                    item.term.toLowerCase()
-            )
-        ) {
-
-            unique.push(item);
-
-        }
-
-    });
-
-    return unique.slice(0, 8);
-
+        .filter(item =>
+            item &&
+            item.term &&
+            item.definition
+        );
 }
 
 
 /* =========================================================
-   FLASHCARDS
+   AUTOMATIC QUIZ GENERATOR
 ========================================================= */
 
-function generateFlashcards(
+function buildQuiz(
+    title,
+    summary,
     keyPoints,
-    terms,
-    sentences
-) {
-
-    const cards = [];
-
-
-    terms.slice(0, 5).forEach(term => {
-
-        cards.push({
-            question: `What is ${term.term}?`,
-            answer: term.definition
-        });
-
-    });
-
-
-    keyPoints.slice(0, 5).forEach(point => {
-
-        if (cards.length >= 10) return;
-
-        cards.push({
-            question: "What is an important idea from this topic?",
-            answer: point
-        });
-
-    });
-
-
-    if (!cards.length && sentences.length) {
-
-        sentences.slice(0, 5).forEach(sentence => {
-
-            cards.push({
-                question: "What should you remember from this?",
-                answer: sentence
-            });
-
-        });
-
-    }
-
-
-    return cards.slice(0, 10);
-
-}
-
-
-/* =========================================================
-   QUIZ GENERATOR
-========================================================= */
-
-function generateQuiz(
-    keyPoints,
-    terms,
-    sentences
+    terms
 ) {
 
     const questions = [];
 
 
-    /*
-        Definition questions
-    */
+    /* -----------------------------------------
+       TERM DEFINITION QUESTIONS
+    ----------------------------------------- */
 
-    terms.slice(0, 5).forEach(term => {
-
-        const correct =
-            term.definition;
+    terms.forEach((item, index) => {
 
         const distractors =
             terms
-                .filter(
-                    other =>
-                        other.term !== term.term
+
+                .filter((_, i) =>
+                    i !== index
                 )
-                .map(other =>
-                    other.definition
-                )
-                .slice(0, 3);
+
+                .map(
+                    t => t.definition
+                );
 
 
-        if (distractors.length >= 2) {
+        const extraFacts =
+            keyPoints.filter(
+                point =>
+                    !distractors.includes(
+                        point
+                    )
+            );
+
+
+        const choices =
+            unique([
+                item.definition,
+                ...distractors,
+                ...extraFacts
+            ]).slice(0, 4);
+
+
+        if (choices.length >= 2) {
+
+            while (choices.length < 4) {
+
+                choices.push(
+                    `Another detail from ${title}`
+                );
+
+            }
+
 
             questions.push({
+
+                id:
+                    `q${questions.length + 1}`,
+
                 question:
-                    `Which statement best describes ${term.term}?`,
+                    `What does "${item.term}" mean?`,
 
-                choices: shuffle([
-                    correct,
-                    ...distractors
-                ]).slice(0, 4),
+                choices:
+                    shuffle(choices),
 
-                answer: correct
+                answer:
+                    item.definition,
+
+                topic:
+                    item.term
+
             });
 
         }
@@ -1324,35 +653,124 @@ function generateQuiz(
     });
 
 
-    /*
-        Key point questions
-    */
+    /* -----------------------------------------
+       KEY POINT QUESTIONS
+    ----------------------------------------- */
 
-    keyPoints.slice(0, 5).forEach(point => {
+    keyPoints.forEach(
+        (point, index) => {
 
-        if (questions.length >= 8) return;
-
-        const correct =
-            point;
-
-        const otherPoints =
-            keyPoints
-                .filter(p => p !== point)
-                .slice(0, 3);
+            if (questions.length >= 10) {
+                return;
+            }
 
 
-        if (otherPoints.length >= 2) {
+            const otherPoints =
+                keyPoints
 
-            questions.push({
-                question:
-                    "Which statement is supported by the uploaded material?",
+                    .filter(
+                        (_, i) =>
+                            i !== index
+                    )
 
-                choices: shuffle([
-                    correct,
+                    .slice(0, 3);
+
+
+            const choices =
+                unique([
+                    point,
                     ...otherPoints
-                ]).slice(0, 4),
+                ]);
 
-                answer: correct
+
+            if (choices.length >= 4) {
+
+                questions.push({
+
+                    id:
+                        `q${questions.length + 1}`,
+
+                    question:
+                        `Which statement is included in the reviewer for "${title}"?`,
+
+                    choices:
+                        shuffle(
+                            choices.slice(0, 4)
+                        ),
+
+                    answer:
+                        point,
+
+                    topic:
+                        point
+
+                });
+
+            }
+
+        }
+    );
+
+
+    /* -----------------------------------------
+       TERM IDENTIFICATION QUESTIONS
+    ----------------------------------------- */
+
+    terms.forEach(item => {
+
+        if (questions.length >= 10) {
+            return;
+        }
+
+
+        const related =
+            terms
+
+                .filter(
+                    t =>
+                        t.term !== item.term
+                )
+
+                .map(
+                    t => t.term
+                );
+
+
+        const choices =
+            unique([
+                item.term,
+                ...related
+            ]).slice(0, 4);
+
+
+        if (choices.length >= 2) {
+
+            while (choices.length < 4) {
+
+                choices.push(
+                    `Term from ${title}`
+                );
+
+            }
+
+
+            questions.push({
+
+                id:
+                    `q${questions.length + 1}`,
+
+                question:
+                    `Which term matches this meaning: "${item.definition}"?`,
+
+                choices:
+                    shuffle(choices),
+
+                answer:
+                    item.term,
+
+                topic:
+                    item.term
+
             });
 
         }
@@ -1360,119 +778,213 @@ function generateQuiz(
     });
 
 
-    return questions.slice(0, 8);
+    return questions
 
+        .slice(0, 10)
+
+        .map(
+            (question, index) => ({
+
+                ...question,
+
+                id:
+                    `q${index + 1}`
+
+            })
+        );
 }
 
 
 /* =========================================================
-   REVIEWER RENDER
+   ARRAY HELPERS
 ========================================================= */
 
-function renderReviewer() {
+function unique(items) {
 
-    document.getElementById("reviewerEmpty")
-        .classList.add("hidden");
-
-    document.getElementById("reviewerContent")
-        .classList.remove("hidden");
-
-    document.getElementById("reviewerTitle")
-        .textContent =
-        reviewData.title;
-
-    document.getElementById("reviewerSubtitle")
-        .textContent =
-        `${reviewData.keyPoints.length} key points • ${reviewData.terms.length} important terms`;
-
-    document.getElementById("summaryContent")
-        .textContent =
-        reviewData.summary;
-
-    const keyPointsList =
-        document.getElementById("keyPointsList");
-
-    keyPointsList.innerHTML = "";
-
-    reviewData.keyPoints.forEach(point => {
-
-        const li =
-            document.createElement("li");
-
-        li.textContent = point;
-
-        keyPointsList.appendChild(li);
-
-    });
-
-
-    const termsList =
-        document.getElementById("termsList");
-
-    termsList.innerHTML = "";
-
-    reviewData.terms.forEach(item => {
-
-        const card =
-            document.createElement("div");
-
-        card.className = "term-card";
-
-        card.innerHTML = `
-            <strong>${escapeHTML(item.term)}</strong>
-            <p>${escapeHTML(item.definition)}</p>
-        `;
-
-        termsList.appendChild(card);
-
-    });
-
-
-    currentFlashcard = 0;
-
-    renderFlashcard();
+    return [
+        ...new Set(
+            items
+                .filter(Boolean)
+                .map(String)
+        )
+    ];
 
 }
 
 
-function saveReview() {
+function shuffle(items) {
 
-    localStorage.setItem(
-        "reviewfirstReview",
-        JSON.stringify(reviewData)
-    );
-
-}
+    const array = [...items];
 
 
-function loadSavedReview() {
+    for (
+        let i = array.length - 1;
+        i > 0;
+        i--
+    ) {
 
-    const saved =
-        localStorage.getItem(
-            "reviewfirstReview"
-        );
+        const j =
+            Math.floor(
+                Math.random() *
+                (i + 1)
+            );
 
-    if (!saved) return;
 
-    try {
-
-        reviewData =
-            JSON.parse(saved);
-
-        renderReviewer();
-
-        renderQuiz();
-
-        renderWeakTopics();
-
-        renderPlanner();
-
-    } catch (error) {
-
-        console.error(error);
+        [
+            array[i],
+            array[j]
+        ] = [
+            array[j],
+            array[i]
+        ];
 
     }
 
+
+    return array;
+}
+
+
+/* =========================================================
+   REVIEWER RENDERING
+========================================================= */
+
+function renderSavedReview() {
+
+    const hasReview =
+        reviewData.title &&
+        reviewData.summary;
+
+
+    if (!hasReview) {
+
+        $("reviewerEmpty")
+            ?.classList.remove(
+                "hidden"
+            );
+
+        $("reviewerContent")
+            ?.classList.add(
+                "hidden"
+            );
+
+
+        if ($("reviewerTitle")) {
+            $("reviewerTitle").textContent =
+                "No topic yet 📖";
+        }
+
+
+        if ($("reviewerSubtitle")) {
+            $("reviewerSubtitle").textContent =
+                "Create your own reviewer first.";
+        }
+
+
+        return;
+    }
+
+
+    $("reviewerEmpty")
+        ?.classList.add(
+            "hidden"
+        );
+
+    $("reviewerContent")
+        ?.classList.remove(
+            "hidden"
+        );
+
+
+    $("reviewerTitle").textContent =
+        reviewData.title;
+
+
+    $("reviewerSubtitle").textContent =
+        "Your personal reviewer is ready. Study it, then test yourself! ♡";
+
+
+    $("summaryContent").textContent =
+        reviewData.summary;
+
+
+    /* -----------------------------------------
+       KEY POINTS
+    ----------------------------------------- */
+
+    const keyPointsList =
+        $("keyPointsList");
+
+    if (keyPointsList) {
+
+        keyPointsList.innerHTML = "";
+
+        reviewData.keyPoints
+            .forEach(point => {
+
+                const li =
+                    document.createElement(
+                        "li"
+                    );
+
+                li.textContent =
+                    point;
+
+                keyPointsList.appendChild(
+                    li
+                );
+
+            });
+
+    }
+
+
+    /* -----------------------------------------
+       TERMS
+    ----------------------------------------- */
+
+    const termsList =
+        $("termsList");
+
+    if (termsList) {
+
+        termsList.innerHTML = "";
+
+        reviewData.terms
+            .forEach(item => {
+
+                const card =
+                    document.createElement(
+                        "div"
+                    );
+
+                card.className =
+                    "term-card";
+
+
+                card.innerHTML = `
+                    <strong>
+                        ${escapeHTML(item.term)}
+                    </strong>
+
+                    <p>
+                        ${escapeHTML(item.definition)}
+                    </p>
+                `;
+
+
+                termsList.appendChild(
+                    card
+                );
+
+            });
+
+    }
+
+
+    renderFlashcard();
+
+    resetQuizUI();
 }
 
 
@@ -1480,26 +992,44 @@ function loadSavedReview() {
    REVIEW TABS
 ========================================================= */
 
-function showReviewTab(tabId, button) {
+function showReviewTab(
+    tabId,
+    button
+) {
 
     document
-        .querySelectorAll(".review-tab-content")
-        .forEach(tab =>
-            tab.classList.remove("active")
-        );
+        .querySelectorAll(
+            ".review-tab-content"
+        )
+        .forEach(tab => {
+
+            tab.classList.remove(
+                "active"
+            );
+
+        });
+
 
     document
-        .querySelectorAll(".review-tab")
-        .forEach(btn =>
-            btn.classList.remove("active")
-        );
+        .querySelectorAll(
+            ".review-tab"
+        )
+        .forEach(tab => {
 
-    document
-        .getElementById(tabId)
-        .classList.add("active");
+            tab.classList.remove(
+                "active"
+            );
 
-    button.classList.add("active");
+        });
 
+
+    $(tabId)?.classList.add(
+        "active"
+    );
+
+    button?.classList.add(
+        "active"
+    );
 }
 
 
@@ -1509,378 +1039,560 @@ function showReviewTab(tabId, button) {
 
 function renderFlashcard() {
 
+    if (
+        !reviewData.flashcards ||
+        !reviewData.flashcards.length
+    ) {
+        return;
+    }
+
+
     const card =
-        reviewData.flashcards[currentFlashcard];
+        reviewData.flashcards[
+            currentFlashcard
+        ];
 
-    if (!card) return;
 
-    const flashcard =
-        document.getElementById("flashcard");
+    if (!$("flashcardQuestion")) {
+        return;
+    }
 
-    flashcard.classList.remove("flipped");
 
-    document.getElementById(
-        "flashcardQuestion"
-    ).textContent =
+    $("flashcardQuestion").textContent =
         card.question;
 
-    document.getElementById(
-        "flashcardAnswer"
-    ).textContent =
+
+    $("flashcardAnswer").textContent =
         card.answer;
 
-    document.getElementById(
-        "flashcardCounter"
-    ).textContent =
+
+    $("flashcardCounter").textContent =
         `${currentFlashcard + 1} / ${reviewData.flashcards.length}`;
 
+
+    $("flashcard")
+        ?.classList.remove(
+            "flipped"
+        );
 }
 
 
 function flipFlashcard() {
 
-    document
-        .getElementById("flashcard")
-        .classList.toggle("flipped");
-
-}
-
-
-function nextFlashcard() {
-
-    if (!reviewData.flashcards.length) return;
-
-    currentFlashcard++;
-
-    if (
-        currentFlashcard >=
-        reviewData.flashcards.length
-    ) {
-        currentFlashcard = 0;
-    }
-
-    renderFlashcard();
+    $("flashcard")
+        ?.classList.toggle(
+            "flipped"
+        );
 
 }
 
 
 function previousFlashcard() {
 
-    if (!reviewData.flashcards.length) return;
-
-    currentFlashcard--;
-
-    if (currentFlashcard < 0) {
-
-        currentFlashcard =
-            reviewData.flashcards.length - 1;
-
+    if (
+        !reviewData.flashcards?.length
+    ) {
+        return;
     }
 
+
+    currentFlashcard =
+        (
+            currentFlashcard -
+            1 +
+            reviewData.flashcards.length
+        )
+        %
+        reviewData.flashcards.length;
+
+
     renderFlashcard();
+}
+
+
+function nextFlashcard() {
+
+    if (
+        !reviewData.flashcards?.length
+    ) {
+        return;
+    }
+
+
+    currentFlashcard =
+        (
+            currentFlashcard + 1
+        )
+        %
+        reviewData.flashcards.length;
+
+
+    renderFlashcard();
+}
+
+
+/* =========================================================
+   QUIZ UI
+========================================================= */
+
+function resetQuizUI() {
+
+    if (!$("quizEmpty")) {
+        return;
+    }
+
+
+    const hasQuiz =
+        Array.isArray(
+            reviewData.quiz
+        )
+        &&
+        reviewData.quiz.length > 0;
+
+
+    $("quizEmpty")
+        .classList.toggle(
+            "hidden",
+            hasQuiz
+        );
+
+
+    $("quizContent")
+        .classList.add(
+            "hidden"
+        );
+
+
+    $("quizResult")
+        .classList.add(
+            "hidden"
+        );
+
+
+    if (hasQuiz) {
+
+        $("quizTopicLabel").textContent =
+            reviewData.title;
+
+
+        $("questionNumber").textContent =
+            `Question 1 of ${reviewData.quiz.length}`;
+
+
+        $("quizScore").textContent =
+            "0";
+    }
 
 }
 
 
 /* =========================================================
-   QUIZ
+   START QUIZ
 ========================================================= */
 
-function renderQuiz() {
+function startQuiz() {
 
-    if (!reviewData.quiz ||
-        !reviewData.quiz.length) {
+    if (
+        !reviewData.quiz?.length
+    ) {
 
-        document
-            .getElementById("quizEmpty")
-            .classList.remove("hidden");
-
-        document
-            .getElementById("quizContent")
-            .classList.add("hidden");
+        resetQuizUI();
 
         return;
     }
 
-    document
-        .getElementById("quizEmpty")
-        .classList.add("hidden");
-
-    document
-        .getElementById("quizResult")
-        .classList.add("hidden");
-
-    document
-        .getElementById("quizContent")
-        .classList.remove("hidden");
-
-    startQuiz();
-
-}
-
-
-function startQuiz() {
 
     quizIndex = 0;
+
     quizScore = 0;
+
     selectedAnswer = null;
-    quizWrongQuestions = [];
 
-    showQuizQuestion();
+    quizWrongItems = [];
 
+
+    $("quizEmpty")
+        ?.classList.add(
+            "hidden"
+        );
+
+
+    $("quizResult")
+        ?.classList.add(
+            "hidden"
+        );
+
+
+    $("quizContent")
+        ?.classList.remove(
+            "hidden"
+        );
+
+
+    renderQuestion();
 }
 
 
-function showQuizQuestion() {
+/* =========================================================
+   RENDER QUESTION
+========================================================= */
 
-    const quiz =
-        reviewData.quiz[quizIndex];
+function renderQuestion() {
 
-    if (!quiz) return;
+    const question =
+        reviewData.quiz[
+            quizIndex
+        ];
+
+
+    if (!question) {
+        return;
+    }
+
 
     selectedAnswer = null;
 
-    document.getElementById(
-        "questionNumber"
-    ).textContent =
-        `Question ${quizIndex + 1} of ${reviewData.quiz.length}`;
 
-    document.getElementById(
-        "quizScore"
-    ).textContent =
-        quizScore;
-
-    document.getElementById(
-        "quizTopicLabel"
-    ).textContent =
+    $("quizTopicLabel").textContent =
         reviewData.title;
 
-    document.getElementById(
-        "questionText"
-    ).textContent =
-        quiz.question;
+
+    $("questionNumber").textContent =
+        `Question ${quizIndex + 1} of ${reviewData.quiz.length}`;
+
+
+    $("quizScore").textContent =
+        quizScore;
+
+
+    $("questionText").textContent =
+        question.question;
+
+
+    $("quizProgressBar").style.width =
+        `${(quizIndex / reviewData.quiz.length) * 100}%`;
 
 
     const choices =
-        document.getElementById(
-            "answerChoices"
-        );
+        $("answerChoices");
+
 
     choices.innerHTML = "";
 
 
-    quiz.choices.forEach(choice => {
+    question.choices
+        .forEach(
+            (choice, index) => {
 
-        const button =
-            document.createElement("button");
-
-        button.className = "choice-btn";
-
-        button.textContent = choice;
-
-        button.onclick = () =>
-            selectAnswer(button, choice);
-
-        choices.appendChild(button);
-
-    });
+                const button =
+                    document.createElement(
+                        "button"
+                    );
 
 
-    document.getElementById(
-        "nextQuestionBtn"
-    ).disabled = true;
+                button.className =
+                    "choice-btn";
 
-    document.getElementById(
-        "quizProgressBar"
-    ).style.width =
-        `${((quizIndex + 1) / reviewData.quiz.length) * 100}%`;
 
+                button.dataset.answer =
+                    choice;
+
+
+                button.innerHTML = `
+                    <span>
+                        ${String.fromCharCode(
+                            65 + index
+                        )}
+                    </span>
+
+                    ${escapeHTML(choice)}
+                `;
+
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        selectAnswer(
+                            choice,
+                            button
+                        );
+
+                    }
+                );
+
+
+                choices.appendChild(
+                    button
+                );
+
+            }
+        );
+
+
+    $("nextQuestionBtn").disabled =
+        true;
+
+
+    $("nextQuestionBtn").textContent =
+        quizIndex ===
+        reviewData.quiz.length - 1
+
+            ? "Finish Quiz ✨"
+
+            : "Next Question →";
 }
 
 
-function selectAnswer(button, choice) {
+/* =========================================================
+   SELECT ANSWER
+========================================================= */
 
-    if (selectedAnswer !== null) return;
+function selectAnswer(
+    answer,
+    button
+) {
 
-    selectedAnswer = choice;
+    if (
+        selectedAnswer !== null
+    ) {
+        return;
+    }
 
-    const quiz =
-        reviewData.quiz[quizIndex];
 
-    document
-        .querySelectorAll(".choice-btn")
-        .forEach(btn => {
+    selectedAnswer =
+        answer;
 
+
+    const question =
+        reviewData.quiz[
+            quizIndex
+        ];
+
+
+    const buttons =
+        [
+            ...document.querySelectorAll(
+                "#answerChoices .choice-btn"
+            )
+        ];
+
+
+    buttons.forEach(
+        btn => {
             btn.disabled = true;
-
-            if (
-                btn.textContent ===
-                quiz.answer
-            ) {
-
-                btn.classList.add("correct");
-
-            }
-
-        });
+        }
+    );
 
 
-    if (choice === quiz.answer) {
-
-        button.classList.add("correct");
+    if (
+        answer === question.answer
+    ) {
 
         quizScore++;
 
+        button.classList.add(
+            "correct"
+        );
+
     } else {
 
-        button.classList.add("wrong");
+        button.classList.add(
+            "wrong"
+        );
 
-        quizWrongQuestions.push(quiz);
+
+        quizWrongItems.push(
+            question
+        );
+
+
+        const correctButton =
+            buttons.find(
+                btn =>
+                    btn.dataset.answer ===
+                    question.answer
+            );
+
+
+        correctButton?.classList.add(
+            "correct"
+        );
 
     }
 
 
-    document.getElementById(
-        "quizScore"
-    ).textContent =
+    $("quizScore").textContent =
         quizScore;
 
-    document.getElementById(
-        "nextQuestionBtn"
-    ).disabled = false;
 
+    $("nextQuestionBtn").disabled =
+        false;
 }
 
 
+/* =========================================================
+   NEXT QUESTION
+========================================================= */
+
 function nextQuestion() {
 
-    quizIndex++;
+    if (
+        selectedAnswer === null
+    ) {
+        return;
+    }
+
 
     if (
-        quizIndex >=
-        reviewData.quiz.length
+        quizIndex <
+        reviewData.quiz.length - 1
     ) {
 
-        finishQuiz();
+        quizIndex++;
+
+        renderQuestion();
 
         return;
     }
 
-    showQuizQuestion();
 
+    finishQuiz();
 }
 
+
+/* =========================================================
+   FINISH QUIZ
+========================================================= */
 
 function finishQuiz() {
 
     const total =
         reviewData.quiz.length;
 
+
     const percentage =
         Math.round(
-            (quizScore / total) * 100
+            (quizScore / total) *
+            100
         );
 
-    document
-        .getElementById("quizContent")
-        .classList.add("hidden");
 
-    document
-        .getElementById("quizResult")
-        .classList.remove("hidden");
-
-    document.getElementById(
-        "finalScore"
-    ).textContent =
-        percentage + "%";
-
-    document.getElementById(
-        "correctAnswers"
-    ).textContent =
-        quizScore;
-
-    document.getElementById(
-        "wrongAnswers"
-    ).textContent =
+    const wrong =
         total - quizScore;
 
 
-    let message =
-        "Keep going! Every review session helps. 🌷";
+    /* -----------------------------------------
+       SAVE SCORE
+    ----------------------------------------- */
+
+    localStorage.setItem(
+        "reviewFirstLastScore",
+
+        JSON.stringify({
+
+            score:
+                quizScore,
+
+            total,
+
+            percentage,
+
+            date:
+                new Date().toISOString()
+
+        })
+    );
+
+
+    /* -----------------------------------------
+       SAVE WEAK TOPICS
+    ----------------------------------------- */
+
+    const weakTopics =
+        quizWrongItems.map(
+            question =>
+                question.topic ||
+                "Review this question"
+        );
+
+
+    localStorage.setItem(
+        "reviewFirstWeakTopics",
+
+        JSON.stringify(
+            weakTopics
+        )
+    );
+
+
+    /* -----------------------------------------
+       SHOW RESULTS
+    ----------------------------------------- */
+
+    $("quizContent")
+        .classList.add(
+            "hidden"
+        );
+
+
+    $("quizResult")
+        .classList.remove(
+            "hidden"
+        );
+
+
+    $("finalScore").textContent =
+        `${percentage}%`;
+
+
+    $("correctAnswers").textContent =
+        quizScore;
+
+
+    $("wrongAnswers").textContent =
+        wrong;
+
 
     if (percentage >= 80) {
 
-        message =
-            "Amazing! You understand a lot of this topic. ✨";
+        $("resultMessage").textContent =
+            "Amazing! You really know your reviewer. 🌷";
 
-    } else if (percentage >= 60) {
+    }
 
-        message =
-            "Good job! A little more review can make it stronger. 💗";
+    else if (percentage >= 60) {
+
+        $("resultMessage").textContent =
+            "Good work! Review the missed parts once more. 💗";
+
+    }
+
+    else {
+
+        $("resultMessage").textContent =
+            "That's okay. Let's use your mistakes to know what to review first. ♡";
 
     }
 
 
-    document.getElementById(
-        "resultMessage"
-    ).textContent =
-        message;
+    $("quizProgressBar").style.width =
+        "100%";
 
-
-    saveQuizResult(
-        percentage,
-        quizWrongQuestions
-    );
-
-    renderWeakTopics();
-
-    renderPlanner();
 
     updateDashboard();
 
-}
-
-
-function restartQuiz() {
-
-    document
-        .getElementById("quizResult")
-        .classList.add("hidden");
-
-    document
-        .getElementById("quizContent")
-        .classList.remove("hidden");
-
-    startQuiz();
-
+    renderWeakTopics();
 }
 
 
 /* =========================================================
-   QUIZ STORAGE
+   RESTART QUIZ
 ========================================================= */
 
-function saveQuizResult(
-    percentage,
-    wrongQuestions
-) {
+function restartQuiz() {
 
-    const result = {
-
-        topic: reviewData.title,
-
-        percentage,
-
-        wrongQuestions,
-
-        date: new Date().toISOString()
-
-    };
-
-    localStorage.setItem(
-        "reviewfirstQuizResult",
-        JSON.stringify(result)
-    );
+    startQuiz();
 
 }
 
@@ -1891,121 +1603,182 @@ function saveQuizResult(
 
 function renderWeakTopics() {
 
-    const saved =
-        localStorage.getItem(
-            "reviewfirstQuizResult"
+    const weakTopics =
+        JSON.parse(
+            localStorage.getItem(
+                "reviewFirstWeakTopics"
+            ) || "[]"
         );
 
-    const weakList =
-        document.getElementById("weakList");
 
-    weakList.innerHTML = "";
-
-
-    if (!saved) {
-
-        weakList.innerHTML = `
-            <div class="empty-state">
-                <div>🌷</div>
-                <h3>No weak topics yet</h3>
-                <p>
-                    Your weak areas will appear after you take a quiz.
-                </p>
-            </div>
-        `;
-
-        document.getElementById(
-            "weakTopicName"
-        ).textContent =
-            reviewData.title || "No topic yet";
-
-        document.getElementById(
-            "focusLevel"
-        ).textContent = "—";
-
-        return;
-
-    }
+    const lastScore =
+        JSON.parse(
+            localStorage.getItem(
+                "reviewFirstLastScore"
+            ) || "null"
+        );
 
 
-    const result =
-        JSON.parse(saved);
+    if (!reviewData.title) {
 
-    const wrongQuestions =
-        result.wrongQuestions || [];
-
-    document.getElementById(
-        "weakTopicName"
-    ).textContent =
-        result.topic;
+        $("weakTopicName").textContent =
+            "No topic yet";
 
 
-    let focus = "Light";
-
-    if (result.percentage < 60) {
-        focus = "High";
-    } else if (result.percentage < 80) {
-        focus = "Medium";
-    }
+        $("weakTopicMessage").textContent =
+            "Create a reviewer and take a quiz first.";
 
 
-    document.getElementById(
-        "focusLevel"
-    ).textContent =
-        focus;
+        $("focusLevel").textContent =
+            "—";
 
 
-    document.getElementById(
-        "weakTopicMessage"
-    ).textContent =
-        wrongQuestions.length
-            ? `You missed ${wrongQuestions.length} question(s). These areas deserve another review.`
-            : "You answered everything correctly. Keep practicing to maintain it!";
+        $("weakList").innerHTML =
+            emptyWeakHTML();
 
-
-    if (!wrongQuestions.length) {
-
-        weakList.innerHTML = `
-            <div class="empty-state">
-                <div>🎉</div>
-                <h3>No weak areas detected!</h3>
-                <p>
-                    You answered all questions correctly.
-                </p>
-            </div>
-        `;
 
         return;
     }
 
 
-    wrongQuestions.forEach((question, index) => {
+    $("weakTopicName").textContent =
+        reviewData.title;
 
-        const item =
-            document.createElement("div");
 
-        item.className = "weak-item";
+    if (!lastScore) {
 
-        item.innerHTML = `
-            <div class="weak-item-icon">
-                🧠
-            </div>
+        $("weakTopicMessage").textContent =
+            "Take a quiz to discover your weak areas.";
 
-            <div class="weak-item-info">
-                <strong>Review Question ${index + 1}</strong>
+
+        $("focusLevel").textContent =
+            "—";
+
+
+        $("weakList").innerHTML =
+            emptyWeakHTML();
+
+
+        return;
+    }
+
+
+    const percentage =
+        lastScore.percentage;
+
+
+    $("focusLevel").textContent =
+        percentage >= 80
+            ? "Low"
+            : percentage >= 60
+                ? "Medium"
+                : "High";
+
+
+    $("weakTopicMessage").textContent =
+        weakTopics.length
+
+            ? `You missed ${weakTopics.length} question${weakTopics.length === 1 ? "" : "s"}. These are your current review areas.`
+
+            : "No missed questions in your latest quiz. Great job! ♡";
+
+
+    if (!weakTopics.length) {
+
+        $("weakList").innerHTML = `
+
+            <div class="empty-state">
+
+                <div>🌟</div>
+
+                <h3>
+                    No weak topics right now
+                </h3>
+
                 <p>
-                    ${escapeHTML(question.question)}
+                    You answered everything correctly in your latest quiz.
                 </p>
+
             </div>
 
-            <div class="weak-bar">
-                <div style="width: 80%;"></div>
-            </div>
         `;
 
-        weakList.appendChild(item);
+        return;
+    }
 
-    });
+
+    const counts = {};
+
+
+    weakTopics.forEach(
+        topic => {
+
+            counts[topic] =
+                (counts[topic] || 0) + 1;
+
+        }
+    );
+
+
+    $("weakList").innerHTML =
+
+        Object.entries(counts)
+
+            .sort(
+                (a, b) =>
+                    b[1] - a[1]
+            )
+
+            .map(
+                ([topic, count]) => `
+
+                    <div class="weak-item">
+
+                        <div>
+
+                            <strong>
+                                ${escapeHTML(topic)}
+                            </strong>
+
+                            <p>
+                                Review this part again before your next quiz.
+                            </p>
+
+                        </div>
+
+                        <span>
+                            ${count}
+                            miss${count === 1 ? "" : "es"}
+                        </span>
+
+                    </div>
+
+                `
+            )
+
+            .join("");
+}
+
+
+function emptyWeakHTML() {
+
+    return `
+
+        <div class="empty-state">
+
+            <div>🌷</div>
+
+            <h3>
+                No weak topics yet
+            </h3>
+
+            <p>
+                Your weak topics will appear after your quiz.
+            </p>
+
+        </div>
+
+    `;
 
 }
 
@@ -2014,244 +1787,284 @@ function renderWeakTopics() {
    STUDY PLANNER
 ========================================================= */
 
-function setStudyTime(minutes, button) {
+function setStudyTime(
+    minutes,
+    button
+) {
 
-    studyMinutes = minutes;
+    studyTime =
+        minutes;
+
 
     document
-        .querySelectorAll(".time-option")
-        .forEach(btn =>
-            btn.classList.remove("active")
-        );
+        .querySelectorAll(
+            ".time-option"
+        )
+        .forEach(btn => {
 
-    button.classList.add("active");
+            btn.classList.remove(
+                "active"
+            );
+
+        });
+
+
+    button?.classList.add(
+        "active"
+    );
+
 
     renderPlanner();
-
 }
 
 
 function renderPlanner() {
 
+    if (!$("plannerTasks")) {
+        return;
+    }
+
+
     const title =
-        document.getElementById(
-            "plannerTitle"
-        );
-
-    const tasks =
-        document.getElementById(
-            "plannerTasks"
-        );
-
-    if (!title || !tasks) return;
+        reviewData.title ||
+        "your current subject";
 
 
-    title.textContent =
-        studyMinutes === 60
-            ? "1-Hour Study Plan"
-            : `${studyMinutes}-Minute Study Plan`;
+    let tasks;
 
 
-    let plan = [];
+    /* -----------------------------------------
+       15 MINUTES
+    ----------------------------------------- */
 
+    if (studyTime === 15) {
 
-    const weakExists =
-        localStorage.getItem(
-            "reviewfirstQuizResult"
-        );
+        tasks = [
 
+            [
+                "📖",
+                "Review your summary",
+                "5 minutes"
+            ],
 
-    if (studyMinutes === 15) {
+            [
+                "🃏",
+                "Study your flashcards",
+                "5 minutes"
+            ],
 
-        plan = [
-
-            {
-                title: "Quick Review",
-                time: "5 min",
-                description: "Read your summary."
-            },
-
-            {
-                title: "Key Points",
-                time: "5 min",
-                description: "Review the most important ideas."
-            },
-
-            {
-                title: "Flashcards",
-                time: "5 min",
-                description: "Test your memory."
-            }
-
-        ];
-
-    } else if (studyMinutes === 30) {
-
-        plan = [
-
-            {
-                title: "Read Summary",
-                time: "7 min",
-                description: "Understand the main idea."
-            },
-
-            {
-                title: "Review Key Points",
-                time: "8 min",
-                description: "Focus on important concepts."
-            },
-
-            {
-                title: weakExists
-                    ? "Focus on Weak Topics"
-                    : "Review Important Terms",
-                time: "8 min",
-                description: weakExists
-                    ? "Spend extra time on missed questions."
-                    : "Memorize important vocabulary."
-            },
-
-            {
-                title: "Flashcards",
-                time: "7 min",
-                description: "Recall the information without looking."
-            }
-
-        ];
-
-    } else {
-
-        plan = [
-
-            {
-                title: "Read the Summary",
-                time: "10 min",
-                description: "Get the big picture first."
-            },
-
-            {
-                title: "Deep Review",
-                time: "15 min",
-                description: "Study the key points carefully."
-            },
-
-            {
-                title: weakExists
-                    ? "Weak Topic Practice"
-                    : "Important Terms",
-                time: "15 min",
-                description: weakExists
-                    ? "Review the concepts you missed."
-                    : "Practice the important terms."
-            },
-
-            {
-                title: "Flashcards",
-                time: "10 min",
-                description: "Practice active recall."
-            },
-
-            {
-                title: "Mini Quiz",
-                time: "10 min",
-                description: "Check what you remember."
-            }
+            [
+                "📝",
+                "Answer a quick quiz",
+                "5 minutes"
+            ]
 
         ];
 
     }
 
 
-    tasks.innerHTML = "";
+    /* -----------------------------------------
+       30 MINUTES
+    ----------------------------------------- */
+
+    else if (studyTime === 30) {
+
+        tasks = [
+
+            [
+                "📖",
+                "Read your summary and key points",
+                "8 minutes"
+            ],
+
+            [
+                "🃏",
+                "Practice the flashcards",
+                "10 minutes"
+            ],
+
+            [
+                "📝",
+                "Take the quiz",
+                "8 minutes"
+            ],
+
+            [
+                "💡",
+                "Review your mistakes",
+                "4 minutes"
+            ]
+
+        ];
+
+    }
 
 
-    plan.forEach((task, index) => {
+    /* -----------------------------------------
+       1 HOUR
+    ----------------------------------------- */
 
-        const item =
-            document.createElement("div");
+    else {
 
-        item.className = "plan-task";
+        tasks = [
 
-        item.innerHTML = `
+            [
+                "📖",
+                "Study the summary and key points",
+                "15 minutes"
+            ],
 
-            <div class="plan-task-number">
-                ${index + 1}
-            </div>
+            [
+                "💡",
+                "Study important terms",
+                "10 minutes"
+            ],
 
-            <div class="plan-task-info">
-                <strong>${task.title}</strong>
-                <span>${task.description}</span>
-            </div>
+            [
+                "🃏",
+                "Practice flashcards",
+                "15 minutes"
+            ],
 
-            <strong>
-                ${task.time}
-            </strong>
+            [
+                "📝",
+                "Take the quiz",
+                "10 minutes"
+            ],
 
-        `;
+            [
+                "🧠",
+                "Review weak topics",
+                "10 minutes"
+            ]
 
-        tasks.appendChild(item);
+        ];
 
-    });
+    }
+
+
+    $("plannerTitle").textContent =
+
+        studyTime === 60
+
+            ? "1-Hour Study Plan"
+
+            : `${studyTime}-Minute Study Plan`;
+
+
+    $("plannerTasks").innerHTML =
+
+        tasks
+
+            .map(
+                task => `
+
+                    <div class="planner-task">
+
+                        <span>
+                            ${task[0]}
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                ${task[1]}
+                            </strong>
+
+                            <small>
+                                ${task[2]}
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                `
+            )
+
+            .join("");
+
+
+    if (
+        reviewData.title
+    ) {
+
+        $("plannerTasks")
+            .insertAdjacentHTML(
+                "afterbegin",
+
+                `
+
+                <div class="planner-note">
+
+                    💗 Topic:
+                    <strong>
+                        ${escapeHTML(title)}
+                    </strong>
+
+                </div>
+
+                `
+            );
+
+    }
 
 }
 
 
 function markPlanDone() {
 
+    const completed =
+
+        Number(
+            localStorage.getItem(
+                "reviewFirstStudySessions"
+            ) || 0
+        ) + 1;
+
+
+    localStorage.setItem(
+        "reviewFirstStudySessions",
+        completed
+    );
+
+
     showToast(
-        "Study plan started! 🌷",
-        "Take it one step at a time. You've got this. ♡"
+        `Study plan started! Session ${completed} is saved. 🌷`
     );
 
 }
 
 
 /* =========================================================
-   ACTIVITIES
+   ACTIVITIES / REMINDERS
 ========================================================= */
 
 function openActivityModal() {
 
-    document
-        .getElementById("activityModal")
-        .classList.add("show");
-
-
-    const tomorrow =
-        new Date();
-
-    tomorrow.setDate(
-        tomorrow.getDate() + 1
-    );
-
-    document.getElementById(
-        "activityDate"
-    ).value =
-        formatDateInput(tomorrow);
-
-
-    document.getElementById(
-        "activityTime"
-    ).value =
-        "19:00";
+    $("activityModal")
+        ?.classList.add(
+            "show"
+        );
 
 
     setTimeout(() => {
 
-        document.getElementById(
-            "activityName"
-        ).focus();
+        $("activityName")
+            ?.focus();
 
-    }, 200);
+    }, 100);
 
 }
 
 
 function closeActivityModal() {
 
-    document
-        .getElementById("activityModal")
-        .classList.remove("show");
+    $("activityModal")
+        ?.classList.remove(
+            "show"
+        );
 
 }
 
@@ -2259,63 +2072,34 @@ function closeActivityModal() {
 function saveActivity() {
 
     const name =
-        document.getElementById(
-            "activityName"
-        ).value.trim();
+        $("activityName")?.value.trim();
 
     const date =
-        document.getElementById(
-            "activityDate"
-        ).value;
+        $("activityDate")?.value;
 
     const time =
-        document.getElementById(
-            "activityTime"
-        ).value;
+        $("activityTime")?.value;
 
     const reminder =
-        parseInt(
-            document.getElementById(
-                "activityReminder"
-            ).value
+        Number(
+            $("activityReminder")?.value || 0
         );
 
 
-    if (!name || !date || !time) {
+    if (!name || !date) {
 
         showToast(
-            "Almost there ♡",
-            "Please complete the activity, date, and time."
+            "Please add an activity name and date. 🔔"
         );
 
         return;
     }
 
 
-    const activityDateTime =
-        new Date(
-            `${date}T${time}:00`
-        );
-
-
-    if (
-        activityDateTime.getTime() <=
-        Date.now()
-    ) {
-
-        showToast(
-            "Choose a future time 🌷",
-            "The activity date and time should be in the future."
-        );
-
-        return;
-    }
-
-
-    const activity = {
+    const item = {
 
         id:
-            Date.now().toString(),
+            Date.now(),
 
         name,
 
@@ -2325,687 +2109,416 @@ function saveActivity() {
 
         reminder,
 
-        completed: false,
-
-        notified: false,
-
-        createdAt:
-            new Date().toISOString()
+        completed:
+            false
 
     };
 
 
-    activities.push(activity);
+    activities.push(item);
 
-    saveActivities();
+
+    activities.sort(
+        (a, b) =>
+
+            `${a.date} ${a.time || "00:00"}`
+                .localeCompare(
+                    `${b.date} ${b.time || "00:00"}`
+                )
+    );
+
+
+    localStorage.setItem(
+        "reviewFirstActivities",
+        JSON.stringify(
+            activities
+        )
+    );
+
+
+    if ($("activityName")) {
+        $("activityName").value = "";
+    }
+
+    if ($("activityDate")) {
+        $("activityDate").value = "";
+    }
+
+    if ($("activityTime")) {
+        $("activityTime").value = "";
+    }
+
+
+    closeActivityModal();
 
     renderActivities();
 
     updateDashboard();
 
-    closeActivityModal();
-
-    resetActivityForm();
-
-    scheduleActivityReminder(activity);
-
 
     showToast(
-        "Reminder saved! 🔔",
-        `${name} is scheduled for ${formatActivityDate(activity)}.`
+        "Activity saved. You got this! 💗"
     );
 
 }
 
 
-function resetActivityForm() {
+function renderActivities(
+    filter = "all"
+) {
 
-    document.getElementById(
-        "activityName"
-    ).value = "";
-
-}
-
-
-/* =========================================================
-   ACTIVITY STORAGE
-========================================================= */
-
-function saveActivities() {
-
-    localStorage.setItem(
-        "reviewfirstActivities",
-        JSON.stringify(activities)
-    );
-
-}
-
-
-/* =========================================================
-   ACTIVITY RENDER
-========================================================= */
-
-let currentActivityFilter = "all";
-
-
-function renderActivities() {
-
-    const list =
-        document.getElementById(
-            "activitiesList"
-        );
-
-    const dashboard =
-        document.getElementById(
-            "dashboardActivities"
-        );
-
-
-    if (!list) return;
-
-
-    const sorted =
-        [...activities].sort(
-            (a, b) =>
-                getActivityDate(a) -
-                getActivityDate(b)
-        );
-
-
-    const filtered =
-        sorted.filter(
-            activity =>
-                activityMatchesFilter(
-                    activity,
-                    currentActivityFilter
-                )
-        );
-
-
-    list.innerHTML = "";
-
-
-    if (!filtered.length) {
-
-        list.innerHTML = `
-            <div class="empty-state">
-                <div>🌷</div>
-                <h3>No activities here</h3>
-                <p>
-                    Add a school activity or deadline to get started.
-                </p>
-            </div>
-        `;
-
-    } else {
-
-        filtered.forEach(activity => {
-
-            list.appendChild(
-                createActivityCard(activity)
-            );
-
-        });
-
-    }
-
-
-    renderDashboardActivities(sorted);
-
-    updateActivityBadge();
-
-}
-
-
-function renderDashboardActivities(sorted) {
-
-    const container =
-        document.getElementById(
-            "dashboardActivities"
-        );
-
-    if (!container) return;
-
-
-    const upcoming =
-        sorted
-            .filter(a => !a.completed)
-            .filter(a =>
-                getActivityDate(a) >= Date.now()
-            )
-            .slice(0, 3);
-
-
-    if (!upcoming.length) {
-
-        container.innerHTML = `
-            <div class="empty-state small">
-                <div>🌷</div>
-                <p>No upcoming activities yet.</p>
-            </div>
-        `;
-
+    if (!$("activitiesList")) {
         return;
     }
 
 
-    container.innerHTML = "";
-
-
-    upcoming.forEach(activity => {
-
-        container.appendChild(
-            createActivityCard(
-                activity,
-                true
-            )
-        );
-
-    });
-
-}
-
-
-function createActivityCard(
-    activity,
-    dashboard = false
-) {
-
-    const card =
-        document.createElement("div");
-
-    card.className =
-        "activity-card" +
-        (activity.completed
-            ? " completed"
-            : "");
-
-
-    const activityDate =
-        getActivityDate(activity);
-
-
-    card.innerHTML = `
-
-        <button
-            class="activity-check"
-            onclick="toggleActivity('${activity.id}')"
-            title="Mark complete"
-        >
-            ${activity.completed ? "✓" : "○"}
-        </button>
-
-
-        <div class="activity-info">
-
-            <strong>
-                ${escapeHTML(activity.name)}
-            </strong>
-
-            <p>
-                🔔 ${reminderText(activity.reminder)}
-            </p>
-
-        </div>
-
-
-        <div class="activity-time">
-
-            <strong>
-                ${formatActivityDate(activity)}
-            </strong>
-
-            <span>
-                ${formatTime(activity.time)}
-            </span>
-
-        </div>
-
-
-        ${
-            dashboard
-                ? ""
-                : `
-                <div class="activity-actions">
-
-                    <button
-                        class="small-action delete-action"
-                        onclick="deleteActivity('${activity.id}')"
-                        title="Delete"
-                    >
-                        🗑
-                    </button>
-
-                </div>
-                `
-        }
-
-    `;
-
-    return card;
-
-}
-
-
-/* =========================================================
-   ACTIVITY FILTER
-========================================================= */
-
-function filterActivities(filter, button) {
-
-    currentActivityFilter = filter;
-
-    document
-        .querySelectorAll(".filter-btn")
-        .forEach(btn =>
-            btn.classList.remove("active")
-        );
-
-    button.classList.add("active");
-
-    renderActivities();
-
-}
-
-
-function activityMatchesFilter(
-    activity,
-    filter
-) {
-
-    const date =
-        getActivityDate(activity);
-
     const now =
         new Date();
 
-    const todayStart =
-        new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate()
-        ).getTime();
 
-    const tomorrowStart =
-        todayStart +
-        24 * 60 * 60 * 1000;
-
-    const dayAfterTomorrow =
-        tomorrowStart +
-        24 * 60 * 60 * 1000;
+    const today =
+        formatDateInput(now);
 
 
-    if (filter === "completed") {
-        return activity.completed;
-    }
+    const tomorrowDate =
+        new Date(now);
 
 
-    if (activity.completed) {
-        return false;
-    }
+    tomorrowDate.setDate(
+        tomorrowDate.getDate() + 1
+    );
+
+
+    const tomorrow =
+        formatDateInput(
+            tomorrowDate
+        );
+
+
+    let list =
+        [...activities];
 
 
     if (filter === "today") {
 
-        return (
-            date >= todayStart &&
-            date < tomorrowStart
-        );
+        list =
+            list.filter(
+                activity =>
+                    activity.date === today &&
+                    !activity.completed
+            );
 
     }
 
 
     if (filter === "tomorrow") {
 
-        return (
-            date >= tomorrowStart &&
-            date < dayAfterTomorrow
-        );
+        list =
+            list.filter(
+                activity =>
+                    activity.date === tomorrow &&
+                    !activity.completed
+            );
 
     }
 
 
     if (filter === "upcoming") {
 
-        return date >= dayAfterTomorrow;
+        list =
+            list.filter(
+                activity =>
+                    activity.date >= today &&
+                    !activity.completed
+            );
 
     }
 
 
-    return true;
+    if (filter === "completed") {
 
-}
-
-
-/* =========================================================
-   ACTIVITY ACTIONS
-========================================================= */
-
-function toggleActivity(id) {
-
-    const activity =
-        activities.find(
-            item => item.id === id
-        );
-
-    if (!activity) return;
-
-    activity.completed =
-        !activity.completed;
-
-    saveActivities();
-
-    renderActivities();
-
-    updateDashboard();
-
-
-    showToast(
-        activity.completed
-            ? "Activity completed! 🎉"
-            : "Activity marked as active.",
-        activity.name
-    );
-
-}
-
-
-function deleteActivity(id) {
-
-    const activity =
-        activities.find(
-            item => item.id === id
-        );
-
-    if (!activity) return;
-
-
-    activities =
-        activities.filter(
-            item => item.id !== id
-        );
-
-    saveActivities();
-
-    renderActivities();
-
-    updateDashboard();
-
-
-    showToast(
-        "Activity removed.",
-        "The reminder has been deleted."
-    );
-
-}
-
-
-/* =========================================================
-   REMINDERS
-========================================================= */
-
-function requestNotificationPermission() {
-
-    if (
-        "Notification" in window &&
-        Notification.permission === "default"
-    ) {
-
-        /*
-            We don't force the permission immediately.
-            The browser can ask when needed.
-        */
-
-    }
-
-}
-
-
-function askForNotifications() {
-
-    if (!("Notification" in window)) {
-
-        showToast(
-            "Notifications aren't supported.",
-            "Your activity will still appear on the dashboard."
-        );
-
-        return;
+        list =
+            list.filter(
+                activity =>
+                    activity.completed
+            );
 
     }
 
 
-    Notification.requestPermission()
-        .then(permission => {
+    if (!list.length) {
 
-            if (permission === "granted") {
+        $("activitiesList").innerHTML = `
 
-                showToast(
-                    "Notifications enabled! 🔔",
-                    "ReviewFirst can now remind you."
-                );
+            <div class="empty-state">
 
-            }
+                <div>🌷</div>
+
+                <h3>
+                    No activities here
+                </h3>
+
+                <p>
+                    Add your school tasks so you don't forget them.
+                </p>
+
+            </div>
+
+        `;
+
+    }
+
+    else {
+
+        $("activitiesList").innerHTML =
+
+            list
+
+                .map(
+                    activity => `
+
+                        <div class="activity-item ${activity.completed ? "completed" : ""}">
+
+                            <div>
+
+                                <strong>
+                                    ${escapeHTML(activity.name)}
+                                </strong>
+
+                                <p>
+                                    📅
+                                    ${escapeHTML(
+                                        formatDisplayDate(
+                                            activity.date
+                                        )
+                                    )}
+
+                                    ${
+                                        activity.time
+                                            ? ` • ⏰ ${escapeHTML(
+                                                formatTime(
+                                                    activity.time
+                                                )
+                                            )}`
+                                            : ""
+                                    }
+
+                                </p>
+
+                            </div>
+
+                            <button
+                                class="secondary-btn"
+                                onclick="toggleActivity(${activity.id})"
+                            >
+
+                                ${
+                                    activity.completed
+                                        ? "Undo"
+                                        : "✓ Done"
+                                }
+
+                            </button>
+
+                        </div>
+
+                    `
+                )
+
+                .join("");
+
+    }
+
+
+    updateActivityBadge();
+
+    renderDashboardActivities();
+}
+
+
+function filterActivities(
+    filter,
+    button
+) {
+
+    document
+        .querySelectorAll(
+            ".filter-btn"
+        )
+        .forEach(btn => {
+
+            btn.classList.remove(
+                "active"
+            );
 
         });
 
-}
 
-
-function scheduleActivityReminder(activity) {
-
-    askForNotifications();
-
-    checkSingleReminder(activity);
-
-}
-
-
-function checkReminderTimers() {
-
-    activities.forEach(activity => {
-
-        checkSingleReminder(activity);
-
-    });
-
-}
-
-
-function checkSingleReminder(activity) {
-
-    if (activity.completed) return;
-
-    if (activity.notified) return;
-
-
-    const activityTime =
-        getActivityDate(activity);
-
-
-    const reminderTime =
-        activityTime -
-        activity.reminder * 60 * 1000;
-
-
-    const now =
-        Date.now();
-
-
-    /*
-        If the reminder time has arrived,
-        notify the student.
-    */
-
-    if (
-        now >= reminderTime &&
-        now < activityTime + 60 * 1000
-    ) {
-
-        notifyActivity(activity);
-
-    }
-
-}
-
-
-function notifyActivity(activity) {
-
-    activity.notified = true;
-
-    saveActivities();
-
-    const message =
-        `${activity.name} — ${formatTime(activity.time)}`;
-
-
-    if (
-        "Notification" in window &&
-        Notification.permission === "granted"
-    ) {
-
-        new Notification(
-            "🔔 ReviewFirst Reminder",
-            {
-                body:
-                    `Don't forget: ${message}`,
-                icon: ""
-            }
-        );
-
-    }
-
-
-    showToast(
-        "🔔 Activity Reminder",
-        `Don't forget: ${message}`
+    button?.classList.add(
+        "active"
     );
 
+
+    renderActivities(
+        filter
+    );
 }
 
 
-/* =========================================================
-   ACTIVITY DATE HELPERS
-========================================================= */
+function toggleActivity(id) {
 
-function getActivityDate(activity) {
-
-    return new Date(
-        `${activity.date}T${activity.time}:00`
-    ).getTime();
-
-}
-
-
-function formatActivityDate(activity) {
-
-    const date =
-        new Date(
-            `${activity.date}T${activity.time}:00`
+    const item =
+        activities.find(
+            activity =>
+                activity.id === id
         );
+
+
+    if (!item) {
+        return;
+    }
+
+
+    item.completed =
+        !item.completed;
+
+
+    localStorage.setItem(
+        "reviewFirstActivities",
+        JSON.stringify(
+            activities
+        )
+    );
+
+
+    renderActivities();
+
+    updateDashboard();
+
+}
+
+
+function updateActivityBadge() {
 
     const today =
-        new Date();
-
-    const tomorrow =
-        new Date();
-
-    tomorrow.setDate(
-        tomorrow.getDate() + 1
-    );
+        formatDateInput(
+            new Date()
+        );
 
 
-    if (
-        date.toDateString() ===
-        today.toDateString()
-    ) {
-
-        return "Today";
-
-    }
+    const count =
+        activities.filter(
+            activity =>
+                !activity.completed &&
+                activity.date >= today
+        ).length;
 
 
-    if (
-        date.toDateString() ===
-        tomorrow.toDateString()
-    ) {
+    if ($("activityBadge")) {
 
-        return "Tomorrow";
+        $("activityBadge").textContent =
+            count;
 
     }
-
-
-    return date.toLocaleDateString(
-        "en-US",
-        {
-            month: "short",
-            day: "numeric"
-        }
-    );
 
 }
 
 
-function formatTime(time) {
+function renderDashboardActivities() {
 
-    const [hour, minute] =
-        time.split(":");
-
-    const date =
-        new Date();
-
-    date.setHours(
-        Number(hour),
-        Number(minute)
-    );
-
-    return date.toLocaleTimeString(
-        "en-US",
-        {
-            hour: "numeric",
-            minute: "2-digit"
-        }
-    );
-
-}
-
-
-function reminderText(minutes) {
-
-    if (minutes === 0) {
-        return "Reminder at activity time";
+    if (!$("dashboardActivities")) {
+        return;
     }
 
-    if (minutes === 1440) {
-        return "Reminder 1 day before";
+
+    const today =
+        formatDateInput(
+            new Date()
+        );
+
+
+    const upcoming =
+
+        activities
+
+            .filter(
+                activity =>
+                    !activity.completed &&
+                    activity.date >= today
+            )
+
+            .sort(
+                (a, b) =>
+                    `${a.date} ${a.time || "00:00"}`
+                        .localeCompare(
+                            `${b.date} ${b.time || "00:00"}`
+                        )
+            )
+
+            .slice(0, 3);
+
+
+    if (!upcoming.length) {
+
+        $("dashboardActivities").innerHTML = `
+
+            <div class="empty-state small">
+
+                <div>🌷</div>
+
+                <p>
+                    No upcoming activities yet.
+                </p>
+
+            </div>
+
+        `;
+
+        return;
     }
 
-    if (minutes === 60) {
-        return "Reminder 1 hour before";
-    }
 
-    return `Reminder ${minutes} minutes before`;
+    $("dashboardActivities").innerHTML =
 
-}
+        upcoming
 
+            .map(
+                activity => `
 
-function formatDateInput(date) {
+                    <div class="activity-preview-item">
 
-    const year =
-        date.getFullYear();
+                        <strong>
+                            ${escapeHTML(
+                                activity.name
+                            )}
+                        </strong>
 
-    const month =
-        String(
-            date.getMonth() + 1
-        ).padStart(2, "0");
+                        <span>
 
-    const day =
-        String(
-            date.getDate()
-        ).padStart(2, "0");
+                            ${escapeHTML(
+                                formatDisplayDate(
+                                    activity.date
+                                )
+                            )}
 
-    return `${year}-${month}-${day}`;
+                            ${
+                                activity.time
+                                    ? ` • ${escapeHTML(
+                                        formatTime(
+                                            activity.time
+                                        )
+                                    )}`
+                                    : ""
+                            }
 
+                        </span>
+
+                    </div>
+
+                `
+            )
+
+            .join("");
 }
 
 
@@ -3015,173 +2528,209 @@ function formatDateInput(date) {
 
 function updateDashboard() {
 
-    const topic =
+    if (!$("currentTopic")) {
+        return;
+    }
+
+
+    $("currentTopic").textContent =
         reviewData.title ||
         "None yet";
 
-    document.getElementById(
-        "currentTopic"
-    ).textContent =
-        topic;
 
-
-    const savedQuiz =
-        localStorage.getItem(
-            "reviewfirstQuizResult"
+    const weak =
+        JSON.parse(
+            localStorage.getItem(
+                "reviewFirstWeakTopics"
+            ) || "[]"
         );
 
-    if (savedQuiz) {
 
-        const result =
-            JSON.parse(savedQuiz);
+    $("weakCount").textContent =
+        weak.length;
 
-        document.getElementById(
-            "lastScore"
-        ).textContent =
-            result.percentage + "%";
+
+    const lastScore =
+        JSON.parse(
+            localStorage.getItem(
+                "reviewFirstLastScore"
+            ) || "null"
+        );
+
+
+    $("lastScore").textContent =
+
+        lastScore
+            ? `${lastScore.percentage}%`
+            : "—";
+
+
+    const today =
+        formatDateInput(
+            new Date()
+        );
+
+
+    $("upcomingCount").textContent =
+
+        activities.filter(
+            activity =>
+                !activity.completed &&
+                activity.date >= today
+        ).length;
+
+
+    renderDashboardActivities();
+
+    updateActivityBadge();
+}
+
+
+/* =========================================================
+   GREETING
+========================================================= */
+
+function updateGreeting() {
+
+    const hour =
+        new Date().getHours();
+
+
+    let greeting =
+        "Good evening 🌷";
+
+
+    if (hour < 12) {
+
+        greeting =
+            "Good morning 🌷";
+
+    }
+
+    else if (hour < 18) {
+
+        greeting =
+            "Good afternoon 🌷";
 
     }
 
 
-    const upcoming =
-        activities.filter(
-            activity =>
-                !activity.completed &&
-                getActivityDate(activity) >= Date.now()
-        );
+    if ($("helloText")) {
 
+        $("helloText").textContent =
+            greeting;
 
-    document.getElementById(
-        "upcomingCount"
-    ).textContent =
-        upcoming.length;
-
-
-    const weak =
-        savedQuiz
-            ? JSON.parse(savedQuiz)
-                .wrongQuestions.length
-            : 0;
-
-
-    document.getElementById(
-        "weakCount"
-    ).textContent =
-        weak;
-
-
-    updateActivityBadge();
-
-}
-
-
-function updateActivityBadge() {
-
-    const badge =
-        document.getElementById(
-            "activityBadge"
-        );
-
-    if (!badge) return;
-
-    const count =
-        activities.filter(
-            activity =>
-                !activity.completed &&
-                getActivityDate(activity) >= Date.now()
-        ).length;
-
-    badge.textContent =
-        count;
+    }
 
 }
 
 
 /* =========================================================
-   UTILITIES
+   DATE
 ========================================================= */
 
-function sleep(ms) {
+function updateDate() {
 
-    return new Promise(
-        resolve => setTimeout(resolve, ms)
+    if (!$("currentDate")) {
+        return;
+    }
+
+
+    $("currentDate").textContent =
+
+        new Date().toLocaleDateString(
+            "en-US",
+            {
+                month: "short",
+                day: "numeric",
+                year: "numeric"
+            }
+        );
+
+}
+
+
+/* =========================================================
+   DATE HELPERS
+========================================================= */
+
+function formatDateInput(date) {
+
+    const y =
+        date.getFullYear();
+
+
+    const m =
+        String(
+            date.getMonth() + 1
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    const d =
+        String(
+            date.getDate()
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    return `${y}-${m}-${d}`;
+}
+
+
+function formatDisplayDate(value) {
+
+    const date =
+        new Date(
+            `${value}T00:00:00`
+        );
+
+
+    return date.toLocaleDateString(
+        "en-US",
+        {
+            month: "short",
+            day: "numeric",
+            year: "numeric"
+        }
+    );
+}
+
+
+function formatTime(value) {
+
+    const [
+        hour,
+        minute
+    ] =
+        value
+            .split(":")
+            .map(Number);
+
+
+    const date =
+        new Date();
+
+
+    date.setHours(
+        hour,
+        minute,
+        0,
+        0
     );
 
-}
 
-
-function shuffle(array) {
-
-    const copy =
-        [...array];
-
-    for (
-        let i = copy.length - 1;
-        i > 0;
-        i--
-    ) {
-
-        const j =
-            Math.floor(
-                Math.random() * (i + 1)
-            );
-
-        [
-            copy[i],
-            copy[j]
-        ] = [
-            copy[j],
-            copy[i]
-        ];
-
-    }
-
-    return copy;
-
-}
-
-
-function titleCase(text) {
-
-    return text
-        .replace(/\s+/g, " ")
-        .trim()
-        .split(" ")
-        .map(word =>
-            word.charAt(0).toUpperCase() +
-            word.slice(1).toLowerCase()
-        )
-        .join(" ");
-
-}
-
-
-function shortenSentence(
-    sentence,
-    maxLength
-) {
-
-    if (sentence.length <= maxLength) {
-        return sentence;
-    }
-
-    return sentence.substring(
-        0,
-        maxLength
-    ).trim() + "...";
-
-}
-
-
-function escapeHTML(text) {
-
-    return String(text)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-
+    return date.toLocaleTimeString(
+        [],
+        {
+            hour: "numeric",
+            minute: "2-digit"
+        }
+    );
 }
 
 
@@ -3189,71 +2738,122 @@ function escapeHTML(text) {
    TOAST
 ========================================================= */
 
-function showToast(title, message) {
+function showToast(message) {
 
     const container =
-        document.getElementById(
-            "toastContainer"
-        );
+        $("toastContainer");
+
+
+    if (!container) {
+        return;
+    }
+
 
     const toast =
-        document.createElement("div");
-
-    toast.className = "toast";
-
-    toast.innerHTML = `
-        <strong>${escapeHTML(title)}</strong>
-        <span>${escapeHTML(message)}</span>
-    `;
-
-    container.appendChild(toast);
+        document.createElement(
+            "div"
+        );
 
 
-    setTimeout(() => {
+    toast.className =
+        "toast";
 
-        toast.style.opacity = "0";
-        toast.style.transform =
-            "translateX(30px)";
 
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
+    toast.textContent =
+        message;
 
-    }, 4000);
 
+    container.appendChild(
+        toast
+    );
+
+
+    setTimeout(
+        () =>
+            toast.classList.add(
+                "show"
+            ),
+        20
+    );
+
+
+    setTimeout(
+        () => {
+
+            toast.classList.remove(
+                "show"
+            );
+
+
+            setTimeout(
+                () =>
+                    toast.remove(),
+                300
+            );
+
+        },
+        3000
+    );
 }
 
 
 /* =========================================================
-   INITIAL SAVED REVIEW
+   SECURITY / HTML HELPER
 ========================================================= */
 
-setTimeout(() => {
+function escapeHTML(value) {
 
-    loadSavedReview();
+    const div =
+        document.createElement(
+            "div"
+        );
 
-    updateDashboard();
 
-}, 100);
+    div.textContent =
+        value ?? "";
+
+
+    return div.innerHTML;
+}
 
 
 /* =========================================================
-   KEYBOARD SHORTCUT
+   OLD FUNCTION COMPATIBILITY
 ========================================================= */
 
-document.addEventListener(
-    "keydown",
-    event => {
+/*
+   These functions stay here temporarily so that
+   any old button or saved HTML does not produce
+   "function not defined" errors.
 
-        if (
-            event.key === "Enter" &&
-            document.activeElement?.id ===
-            "nameInput"
-        ) {
+   Upload Notes itself is no longer used.
+*/
 
-            saveName();
 
-        }
+function startMagicReview() {
 
+    createMyReviewer();
+
+}
+
+
+function removeFile() {
+
+    const input =
+        $("fileInput");
+
+
+    if (input) {
+        input.value = "";
     }
-);
+
+}
+
+
+function handleFile() {
+
+    showToast(
+        "Upload Notes has been replaced with Create Reviewer. ✍️"
+    );
+
+}
